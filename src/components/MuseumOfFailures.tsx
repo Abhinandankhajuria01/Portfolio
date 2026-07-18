@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const failures = [
   {
@@ -36,12 +36,6 @@ const failures = [
 
 export default function MuseumOfFailures() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"]
-  });
-  
-  const y = useTransform(scrollYProgress, [0, 1], [100, -100]);
 
   return (
     <section ref={containerRef} className="py-16 md:py-32 px-6 bg-[#0a0a0a] text-white relative overflow-hidden">
@@ -71,7 +65,7 @@ export default function MuseumOfFailures() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
-          {failures.map((failure, index) => (
+          {failures.map((failure) => (
             <motion.div
               key={failure.id}
               initial={{ opacity: 0, y: 50 }}

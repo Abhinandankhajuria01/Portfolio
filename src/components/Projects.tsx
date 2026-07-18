@@ -299,6 +299,7 @@ export default function Projects() {
                     rel="noopener noreferrer"
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!selectedProject.demoUrl) return;
                       const win = window.open(selectedProject.demoUrl, '_blank', 'noopener,noreferrer');
                       if (!win || win.closed || typeof win.closed === 'undefined') {
                         window.location.href = selectedProject.demoUrl;
