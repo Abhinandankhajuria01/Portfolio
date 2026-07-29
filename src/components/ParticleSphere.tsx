@@ -135,8 +135,8 @@ export default function ParticleSphere() {
       
       // Update pre-allocated array (zero allocations = no garbage collection lag)
       for (let i = 0; i < numParticles; i++) {
-        const p = particles[i];
         const proj = projected[i];
+        const p = proj.p; // CRITICAL FIX: Use the particle attached to this projected object, since the array gets sorted!
         
         const pos = getWavePosition(p, time, scrollYOffset);
         const cameraZ = pos.z * 200 + 250;
@@ -147,7 +147,7 @@ export default function ParticleSphere() {
         proj.screenY = height / 2 + pos.y * radius * proj.scale;
       }
 
-      // Sort in-place
+      // Sort in-place back-to-front
       projected.sort((a, b) => b.z - a.z);
 
       ctx.lineCap = 'round';
