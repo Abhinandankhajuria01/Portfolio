@@ -86,29 +86,7 @@ export default function MuseumOfFailures() {
     }
   }, []);
 
-  // Map global vertical page scroll to horizontal gallery scrolling
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    
-    let lastScrollY = window.scrollY;
-    
-    const onScroll = () => {
-      const currentScrollY = window.scrollY;
-      const deltaY = currentScrollY - lastScrollY;
-      
-      // Only scroll horizontally if the gallery is visible in the viewport
-      const rect = container.getBoundingClientRect();
-      if (rect.top < window.innerHeight && rect.bottom > 0) {
-        container.scrollLeft += deltaY * 1.5; // 1.5x speed multiplier for a better feel
-      }
-      
-      lastScrollY = currentScrollY;
-    };
-    
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+
 
   useEffect(() => {
     const renderLoop = () => {
@@ -153,25 +131,21 @@ export default function MuseumOfFailures() {
           // Dramatic scale drop-off for a strong 3D depth effect
           let targetScale = Math.max(0.4, 1 - Math.abs(dist) * 0.45); 
           let targetGlow = Math.max(0, 1 - Math.abs(dist) * 1.5);
-          let targetRotate = -dist * 40; // Spin into a "roll" effect
 
           if (isHovered) {
             targetScale = 1.05;
             targetGlow = 1;
-            targetRotate = 0; // Flat to the camera
           } else if (anyCardHovered) {
             targetScale *= 0.8; // Shrink all other cards
             targetGlow *= 0.2; // Severely dim their glow
-            targetRotate *= 1.2; // Spin them away further
           }
 
           const data = cardsData.current[index];
           // Snappier lerp (0.15) eliminates "rubber banding" lag when scrolling fast
           data.currentScale = lerp(data.currentScale, targetScale, 0.15);
           data.currentGlow = lerp(data.currentGlow || 0, targetGlow, 0.15);
-          data.currentRotate = lerp(data.currentRotate || 0, targetRotate, 0.15);
 
-          card.style.transform = `perspective(1200px) scale(${data.currentScale}) rotateY(${data.currentRotate}deg)`;
+          card.style.transform = `scale(${data.currentScale})`;
           
           if (innerCard) {
             const glowIntensity = data.currentGlow;
@@ -235,6 +209,19 @@ export default function MuseumOfFailures() {
               },
             }
           );
+
+          // Map vertical scroll to horizontal scroll reliably for mobile and desktop
+          gsap.to(containerRef.current, {
+            scrollLeft: () => containerRef.current ? containerRef.current.scrollWidth - window.innerWidth : 0,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: 'top bottom', // Start when section enters from bottom
+              end: 'bottom top',   // End when section leaves at top
+              scrub: 1,            // Smooth 1s catch-up time
+              invalidateOnRefresh: true,
+            }
+          });
         }
       }, el);
     } catch (e) {
@@ -283,7 +270,7 @@ export default function MuseumOfFailures() {
           <div 
             key={`${failure.id}-${index}`} 
             ref={(el) => { cardsRef.current[index] = el; }}
-            className="w-[280px] sm:w-[380px] shrink-0 mx-2 sm:mx-4 relative cursor-pointer group"
+            className="w-[280px] sm:w-[380px] shrink-0 -mx-8 sm:-mx-12 relative cursor-pointer group"
             onMouseEnter={() => handleCardHover(index)}
             onMouseLeave={handleMouseLeave}
           >
