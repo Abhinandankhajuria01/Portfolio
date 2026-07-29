@@ -159,7 +159,7 @@ export default function About() {
       <div className="max-w-6xl mx-auto">
 
         {/* Heading */}
-        <div className="mb-12 md:mb-24 text-center">
+        <div className="mb-6 md:mb-24 text-center">
           <h2
             ref={headingRef}
             className="text-3xl md:text-4xl font-black uppercase tracking-[0.2em] mb-6 md:mb-12"
@@ -171,12 +171,12 @@ export default function About() {
           {/* Approach cards row */}
           <div className="flex justify-center items-center relative max-w-4xl mx-auto overflow-hidden pb-4">
             <div ref={dividerRef} className="absolute top-[18px] left-8 right-8 h-[1px] bg-gray-200 hidden md:block" />
-            <div ref={trackRef} className="flex justify-start md:justify-between gap-6 w-full px-2 md:px-12">
+            <div ref={trackRef} className="flex justify-start md:justify-between gap-2 md:gap-6 w-full px-2 md:px-12">
               {cards.map((card, idx) => (
                 <div
                   key={idx}
                   ref={el => { cardsRef.current[idx] = el; }}
-                  className="flex flex-col items-center bg-white px-2 w-28 flex-shrink-0 md:w-auto group"
+                  className="flex flex-col items-center bg-white px-1 w-24 flex-shrink-0 md:w-auto group"
                 >
                   <div className="w-3 h-3 bg-black rounded-full mb-3 md:mb-4 transition-transform duration-300 group-hover:scale-150 group-hover:bg-gray-700" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 text-center transition-colors duration-300 group-hover:text-black">
@@ -189,7 +189,7 @@ export default function About() {
         </div>
 
         {/* Content with parallax images */}
-        <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16 mt-6 md:mt-24">
+        <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16 mt-2 md:mt-24">
 
           <div className="w-full md:w-1/2 relative h-[210px] sm:h-[320px] md:h-[400px] mb-4 md:mb-0">
             {/* Back image */}
