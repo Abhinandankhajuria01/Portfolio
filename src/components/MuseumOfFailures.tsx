@@ -110,19 +110,25 @@ export default function MuseumOfFailures() {
         
         .carousel-3d-ring {
           position: relative;
-          width: 300px;
-          height: 400px;
+          width: 320px;
+          height: 420px;
           transform-style: preserve-3d;
-          animation: rotateRing 30s linear infinite;
+          /* We apply animation that includes scale */
+          animation: rotateRingMobile 30s linear infinite;
         }
         
         .carousel-3d-ring:hover {
           animation-play-state: paused;
         }
         
-        @keyframes rotateRing {
-          0% { transform: rotateY(0deg); }
-          100% { transform: rotateY(-360deg); } /* negative for right-to-left rotation */
+        @keyframes rotateRingMobile {
+          0% { transform: scale(0.75) rotateY(0deg); }
+          100% { transform: scale(0.75) rotateY(-360deg); }
+        }
+        
+        @keyframes rotateRingDesktop {
+          0% { transform: scale(1) rotateY(0deg); }
+          100% { transform: scale(1) rotateY(-360deg); }
         }
         
         .carousel-3d-card {
@@ -134,10 +140,14 @@ export default function MuseumOfFailures() {
           /* backface-visibility: hidden; optional, but keeping it visible is cool */
         }
         
-        @media (min-width: 640px) {
+        @media (min-width: 768px) {
+          .carousel-3d-container {
+            height: 700px;
+          }
           .carousel-3d-ring {
             width: 380px;
             height: 450px;
+            animation: rotateRingDesktop 30s linear infinite;
           }
         }
       `}</style>
@@ -150,7 +160,7 @@ export default function MuseumOfFailures() {
       />
 
       <div className="max-w-6xl mx-auto relative z-10">
-        <div ref={headerRef} className="mb-10 md:mb-16 text-center">
+        <div ref={headerRef} className="mb-4 md:mb-10 text-center">
           <p className="text-red-500 font-mono text-sm tracking-widest uppercase mb-4">Exhibit.04</p>
           <h2 className="text-4xl md:text-6xl font-black uppercase tracking-[0.1em] mb-6">
             Museum of Failures.
@@ -162,21 +172,18 @@ export default function MuseumOfFailures() {
         </div>
 
         {/* 3D Rotating Carousel */}
-        <div ref={gridRef} className="carousel-3d-container w-full pt-4">
+        <div ref={gridRef} className="carousel-3d-container w-full">
           <div className="carousel-3d-ring">
             {failures.map((failure, index) => {
               // 5 cards = 360 / 5 = 72 degrees each
               const rotateY = index * 72;
-              // TranslateZ determines the radius of the circle
-              // Z needs to be large enough so cards don't overlap. 
-              // Math: Z = (width / 2) / Math.tan(PI / 5) ~ width * 0.688. 
-              // We'll use 400px (desktop) and 280px (mobile) dynamically via a CSS custom property or inline style
+              // Fixed TranslateZ to form the perfect circle (approx width * 0.85)
               return (
                 <div 
                   key={failure.id} 
                   className="carousel-3d-card"
                   style={{
-                    transform: `rotateY(${rotateY}deg) translateZ(clamp(280px, 45vw, 420px))`
+                    transform: `rotateY(${rotateY}deg) translateZ(420px)`
                   }}
                 >
                   <motion.div
