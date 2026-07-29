@@ -13,12 +13,8 @@
   --animate-float: float 6s ease-in-out infinite;
 
   @keyframes float {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-20px);
-    }
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-20px); }
   }
 }
 
@@ -29,13 +25,13 @@
     font-family: var(--font-sans);
     overflow-x: hidden;
   }
-  
+
   @media (min-width: 768px) {
     body, a, button, [role="button"] {
       cursor: none !important;
     }
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
     text-transform: uppercase;
@@ -49,30 +45,114 @@
     background-color: transparent;
     transition: all 300ms ease;
   }
-  
   .wireframe-card:hover {
-    border-color: #FFFFFF;
+    border-color: #ffffff;
     background-color: rgba(255, 255, 255, 0.05);
   }
-
   .text-stark {
-    color: #FFFFFF;
+    color: #ffffff;
     font-weight: 900;
     letter-spacing: 0.2em;
   }
+  /* Shimmer sweep on card hover */
+  .card-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .card-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.07) 50%,
+      transparent 60%
+    );
+    background-size: 200% 100%;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .card-shimmer:hover::after {
+    opacity: 1;
+    animation: card-shimmer-sweep 0.7s linear;
+  }
 }
 
-/* Custom Scrollbar for a premium feel */
-::-webkit-scrollbar {
-  width: 8px;
+/* ─── Scroll Progress Bar ───────────────────────────────── */
+#scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #fff 0%, #aaa 60%, #fff 100%);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  z-index: 9999;
+  pointer-events: none;
 }
-::-webkit-scrollbar-track {
-  background: #050505; 
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    @keyframes grow-progress {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+    #scroll-progress {
+      animation: grow-progress auto linear;
+      animation-timeline: scroll();
+    }
+  }
 }
-::-webkit-scrollbar-thumb {
-  background: #333; 
-  border-radius: 4px;
+
+/* ─── Custom Scrollbar ──────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #050505; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+
+/* ─── Keyframes ─────────────────────────────────────────── */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(50px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #555; 
+@keyframes reveal-left {
+  from { opacity: 0; transform: translateX(-60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes reveal-right {
+  from { opacity: 0; transform: translateX(60px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes reveal-scale {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer-line {
+  0%   { transform: scaleX(0); opacity: 0; }
+  100% { transform: scaleX(1); opacity: 1; }
+}
+@keyframes orb-drift {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(30px, -20px) scale(1.05); }
+  66%  { transform: translate(-20px, 15px) scale(0.97); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+@keyframes card-shimmer-sweep {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes section-line-draw {
+  from { scaleX: 0; }
+  to   { scaleX: 1; }
+}
+
+/* ─── Floating glow orb ─────────────────────────────────── */
+.bg-orb {
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: orb-drift 14s ease-in-out infinite;
+  pointer-events: none;
 }

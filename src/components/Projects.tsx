@@ -99,6 +99,7 @@ const projects: Project[] = [
 export default function Projects() {
   const sectionRef = useRef<HTMLElement>(null);
   const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   // Lock body scroll when modal is open
@@ -117,24 +118,55 @@ export default function Projects() {
     const el = sectionRef.current;
     if (!el) return;
 
-    cardsRef.current.forEach((card) => {
-      if (!card) return;
-      gsap.fromTo(card,
-        { opacity: 0.2, y: 70, scale: 0.94 },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          ease: "none",
-          scrollTrigger: {
-            trigger: card,
-            start: "top 90%",
-            end: "top 65%",
-            scrub: 1,
+    const ctx = gsap.context(() => {
+      // Heading: wipe in from left
+      if (headingRef.current) {
+        gsap.fromTo(
+          headingRef.current,
+          { opacity: 0, x: -60, clipPath: 'inset(0 100% 0 0)' },
+          {
+            opacity: 1,
+            x: 0,
+            clipPath: 'inset(0 0% 0 0)',
+            duration: 1.1,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: headingRef.current,
+              start: 'top 85%',
+            },
           }
-        }
-      );
-    });
+        );
+      }
+
+      // Cards: alternate left/right + scale + scrub
+      cardsRef.current.forEach((card, idx) => {
+        if (!card) return;
+        gsap.fromTo(
+          card,
+          {
+            opacity: 0,
+            y: 60,
+            x: idx % 2 === 0 ? -30 : 30,
+            scale: 0.92,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            x: 0,
+            scale: 1,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: card,
+              start: 'top 90%',
+              end: 'top 60%',
+              scrub: 0.9,
+            },
+          }
+        );
+      });
+    }, el);
+
+    return () => ctx.revert();
   }, []);
 
   return (
@@ -144,7 +176,7 @@ export default function Projects() {
         <div className="flex flex-col lg:flex-row gap-16 lg:gap-24">
           {/* Left Column Header */}
           <div className="lg:w-1/3">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-[0.1em] leading-tight sticky top-32">
+            <h2 ref={headingRef} className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-[0.1em] leading-tight sticky top-32" style={{ clipPath: 'inset(0 0% 0 0)' }}>
               Featured<br/>Projects.<br/>
               <span className="text-gray-600 block mt-4">Unmatched<br/>Innovation.</span>
             </h2>
@@ -164,8 +196,8 @@ export default function Projects() {
                   className="wireframe-card p-6 md:p-10 flex flex-col group relative overflow-hidden cursor-pointer transition-colors"
                   onClick={() => setSelectedProject(project)}
                 >
-                  {/* Subtle background highlight on hover */}
-                  <div className="absolute inset-0 bg-white/5 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out z-0"></div>
+                  {/* Shimmer sweep on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out z-0 pointer-events-none" />
                   
                   <div className="relative z-10 flex-1">
                     <div className="w-12 h-12 border border-white/30 flex items-center justify-center mb-6 md:mb-8 bg-black">

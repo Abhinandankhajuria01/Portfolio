@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import Hero from './components/Hero';
 import AboutMe from './components/AboutMe';
 import About from './components/About';
@@ -8,9 +9,32 @@ import MuseumOfFailures from './components/MuseumOfFailures';
 import Contact from './components/Contact';
 import CustomCursor from './components/CustomCursor';
 
+function ScrollProgressBar() {
+  useEffect(() => {
+    // JS fallback for browsers without CSS scroll-driven animation support
+    if (CSS.supports('animation-timeline', 'scroll()')) return;
+
+    const progress = document.getElementById('scroll-progress');
+    if (!progress) return;
+
+    const onScroll = () => {
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+      const scrolled = window.scrollY;
+      const pct = scrollable > 0 ? scrolled / scrollable : 0;
+      progress.style.transform = `scaleX(${pct})`;
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return <div id="scroll-progress" aria-hidden="true" />;
+}
+
 function App() {
   return (
     <div className="min-h-screen bg-background text-gray-200 font-sans selection:bg-primary/30 selection:text-cyan-200">
+      <ScrollProgressBar />
       <CustomCursor />
       <Hero />
       <About />
@@ -20,18 +44,8 @@ function App() {
       <MuseumOfFailures />
       <AboutMe />
       <Contact />
-      
+
       <footer className="py-12 flex flex-col items-center justify-center gap-6 border-t border-white/5 text-gray-500">
-        {/* 
-        <a 
-          href="http://localhost:5175" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-xs uppercase tracking-widest text-gray-400 hover:text-white border border-gray-800 hover:border-gray-500 rounded-full px-6 py-2 transition-all duration-300"
-        >
-          Read My Autobiography
-        </a>
-        */}
         <p className="text-sm">© {new Date().getFullYear()} Abhinandan Khajuria. All rights reserved.</p>
       </footer>
     </div>
