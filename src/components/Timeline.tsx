@@ -16,7 +16,7 @@ const milestones = [
   { title: 'Built Planix', desc: 'After hearing about the struggles contractors faced managing projects through Excel sheets, WhatsApp chats, and notes, I saw an opportunity to solve a real-world problem. Inspired by my friend, who works in construction and dreams of becoming a contractor himself, I built Planix — an AI-powered construction management platform designed to simplify project management.' },
   { title: 'Built RydMate', desc: 'Engineered RydMate — an enterprise-grade, real-time campus transportation and AI telemetry platform for IIT Jammu. Combining high-concurrency GPS tracking, AI demand forecasting, and interactive vector mapping to revolutionize campus mobility.' },
   { title: 'Present Day', desc: 'Today, I am a Computer Science student, Full Stack AI Developer, builder, entrepreneur, and lifelong learner. I enjoy solving real-world problems, building products, and constantly exploring new technologies.' },
-  { title: 'Looking Ahead', desc: 'My vision is to build scalable solutions that improve people's lives, create products used by thousands, become an AI engineer, achieve financial freedom, grow closer to God, spread kindness, and make life a little better for everyone around me.' },
+  { title: 'Looking Ahead', desc: "My vision is to build scalable solutions that improve people's lives, create products used by thousands, become an AI engineer, achieve financial freedom, grow closer to God, spread kindness, and make life a little better for everyone around me." },
 ];
 
 export default function Timeline() {

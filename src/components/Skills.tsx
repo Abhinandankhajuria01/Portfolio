@@ -45,7 +45,7 @@ export default function Skills() {
         const items = containerRef.current.querySelectorAll<HTMLElement>('.skill-pill');
         gsap.fromTo(
           items,
-          (i) => ({
+          (i: number) => ({
             opacity: 0,
             y: 40 + (i % 3) * 10,
             scale: 0.75,
