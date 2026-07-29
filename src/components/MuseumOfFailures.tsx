@@ -72,32 +72,27 @@ export default function MuseumOfFailures() {
         );
       }
 
-      // Cards: diagonal stagger — odd from left, even from right
+      // Cards: stagger slide in from the side (right)
       if (gridRef.current) {
         const cards = gridRef.current.querySelectorAll<HTMLElement>('.failure-card');
-        cards.forEach((card, i) => {
-          gsap.fromTo(
-            card,
-            {
-              opacity: 0,
-              x: i % 2 === 0 ? -60 : 60,
-              y: 40,
-              scale: 0.92,
+        gsap.fromTo(
+          cards,
+          {
+            opacity: 0,
+            x: 50,
+          },
+          {
+            opacity: 1,
+            x: 0,
+            duration: 0.85,
+            stagger: 0.15,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: gridRef.current,
+              start: 'top 85%',
             },
-            {
-              opacity: 1,
-              x: 0,
-              y: 0,
-              scale: 1,
-              duration: 0.85,
-              ease: 'power3.out',
-              scrollTrigger: {
-                trigger: card,
-                start: 'top 88%',
-              },
-            }
-          );
-        });
+          }
+        );
       }
     }, el);
 
