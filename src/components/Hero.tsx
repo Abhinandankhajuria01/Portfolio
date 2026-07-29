@@ -45,7 +45,7 @@ export default function Hero() {
         <motion.a 
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.5, duration: 1 }}
           href="#projects"
-          className="border-2 border-white rounded-full px-8 py-3.5 md:px-10 md:py-4 text-white uppercase tracking-[0.2em] text-xs sm:text-sm font-bold hover:bg-white hover:text-black transition-all duration-300 relative z-30 shadow-lg"
+          className="border-2 border-white rounded-full px-8 py-3.5 md:px-10 md:py-4 text-white uppercase tracking-[0.2em] text-xs sm:text-sm font-bold hover:bg-white hover:text-black transition-colors duration-300 relative z-30 shadow-lg"
         >
           View Projects
         </motion.a>
