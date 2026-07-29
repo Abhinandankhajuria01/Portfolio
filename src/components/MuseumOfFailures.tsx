@@ -72,20 +72,15 @@ export default function MuseumOfFailures() {
         );
       }
 
-      // Cards: stagger slide in from the side (right)
+      // Fade in the entire marquee container
       if (gridRef.current) {
-        const cards = gridRef.current.querySelectorAll<HTMLElement>('.failure-card');
         gsap.fromTo(
-          cards,
-          {
-            opacity: 0,
-            x: 50,
-          },
+          gridRef.current,
+          { opacity: 0, y: 30 },
           {
             opacity: 1,
-            x: 0,
-            duration: 0.85,
-            stagger: 0.15,
+            y: 0,
+            duration: 1,
             ease: 'power3.out',
             scrollTrigger: {
               trigger: gridRef.current,
@@ -104,6 +99,19 @@ export default function MuseumOfFailures() {
       ref={sectionRef}
       className="py-16 md:py-32 px-6 bg-[#0a0a0a] text-white relative overflow-hidden"
     >
+      <style>{`
+        .animate-marquee {
+          animation: marquee 30s linear infinite;
+        }
+        .animate-marquee:hover {
+          animation-play-state: paused;
+        }
+        @keyframes marquee {
+          0% { transform: translateX(0%); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+      
       {/* Background glow */}
       <div
         className="bg-orb absolute top-1/4 right-1/4 w-[500px] h-[500px] opacity-10"
@@ -127,40 +135,44 @@ export default function MuseumOfFailures() {
           </p>
         </div>
 
-        <div ref={gridRef} className="flex flex-nowrap overflow-x-auto gap-6 sm:gap-8 pb-8 pt-4 snap-x snap-mandatory scroll-smooth" style={{ scrollbarWidth: 'none' }}>
-          {failures.map((failure) => (
-            <motion.div
-              key={failure.id}
-              className="failure-card shrink-0 w-[85vw] sm:w-[400px] snap-center bg-[#111] border border-white/10 p-5 sm:p-8 transition-colors duration-500 group cursor-pointer relative overflow-hidden"
-              whileHover={{
-                scale: 1.04,
-                y: -6,
-                borderColor: 'rgba(239, 68, 68, 0.8)',
-                boxShadow: '0 15px 35px rgba(239, 68, 68, 0.15)',
-              }}
-              whileTap={{ scale: 0.96 }}
-              transition={{ type: 'spring', stiffness: 350, damping: 20 }}
-            >
-              {/* Shimmer sweep overlay */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out pointer-events-none" />
+        {/* Marquee Wrapper */}
+        <div ref={gridRef} className="overflow-hidden w-[100vw] relative left-1/2 -translate-x-1/2 pb-8 pt-4">
+          <div className="flex w-max animate-marquee">
+            {[...failures, ...failures].map((failure, index) => (
+              <div key={`${failure.id}-${index}`} className="pr-6 sm:pr-8 shrink-0">
+                <motion.div
+                  className="failure-card w-[85vw] sm:w-[400px] bg-[#111] border border-white/10 p-5 sm:p-8 transition-colors duration-500 group cursor-pointer relative overflow-hidden"
+                  whileHover={{
+                    scale: 1.04,
+                    y: -6,
+                    borderColor: 'rgba(239, 68, 68, 0.8)',
+                    boxShadow: '0 15px 35px rgba(239, 68, 68, 0.15)',
+                  }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 350, damping: 20 }}
+                >
+                  {/* Shimmer sweep overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out pointer-events-none" />
 
-              <div className="text-4xl sm:text-5xl font-black text-white/5 mb-4 sm:mb-8 group-hover:text-red-500/20 transition-colors duration-500">
-                {failure.id}
+                  <div className="text-4xl sm:text-5xl font-black text-white/5 mb-4 sm:mb-8 group-hover:text-red-500/20 transition-colors duration-500">
+                    {failure.id}
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-bold uppercase tracking-wider mb-2 sm:mb-4 leading-snug">
+                    {failure.title}
+                  </h3>
+                  <p className="text-gray-500 mb-4 sm:mb-6 text-xs sm:text-sm leading-relaxed">
+                    {failure.story}
+                  </p>
+                  <div className="pt-4 sm:pt-6 border-t border-white/10">
+                    <p className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-red-500 mb-1">
+                      Lesson Learned
+                    </p>
+                    <p className="text-xs sm:text-sm font-bold text-gray-300">{failure.lesson}</p>
+                  </div>
+                </motion.div>
               </div>
-              <h3 className="text-lg sm:text-xl font-bold uppercase tracking-wider mb-2 sm:mb-4 leading-snug">
-                {failure.title}
-              </h3>
-              <p className="text-gray-500 mb-4 sm:mb-6 text-xs sm:text-sm leading-relaxed">
-                {failure.story}
-              </p>
-              <div className="pt-4 sm:pt-6 border-t border-white/10">
-                <p className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-red-500 mb-1">
-                  Lesson Learned
-                </p>
-                <p className="text-xs sm:text-sm font-bold text-gray-300">{failure.lesson}</p>
-              </div>
-            </motion.div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </section>
