@@ -80,43 +80,36 @@ export default function About() {
         );
       }
 
-      // Background image parallax (slower scroll)
+      // Background image parallax (fade in to center, fade out to top)
       if (imgBackRef.current) {
-        gsap.fromTo(
-          imgBackRef.current,
-          { y: 30, opacity: 0, scale: 1.05 },
-          {
-            y: -20,
-            opacity: 1,
-            scale: 1,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: imgBackRef.current,
-              start: 'top 90%',
-              end: 'bottom 10%',
-              scrub: 1.5,
-            },
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: imgBackRef.current,
+            start: 'top 90%',
+            end: 'bottom 10%',
+            scrub: 1,
           }
-        );
+        });
+        
+        tl.fromTo(imgBackRef.current, { y: 40, scale: 1.05 }, { y: -40, scale: 1, ease: 'none', duration: 2 }, 0);
+        tl.fromTo(imgBackRef.current, { opacity: 0 }, { opacity: 1, ease: 'power2.out', duration: 1 }, 0);
+        tl.to(imgBackRef.current, { opacity: 0.1, ease: 'power2.in', duration: 1 }, 1);
       }
 
-      // Foreground image: slightly faster parallax + fade in
+      // Foreground image: slightly faster parallax + same center-fade logic
       if (imgFrontRef.current) {
-        gsap.fromTo(
-          imgFrontRef.current,
-          { y: 50, opacity: 0 },
-          {
-            y: -30,
-            opacity: 1,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: imgFrontRef.current,
-              start: 'top 90%',
-              end: 'bottom 10%',
-              scrub: 1,
-            },
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: imgFrontRef.current,
+            start: 'top 90%',
+            end: 'bottom 10%',
+            scrub: 0.8,
           }
-        );
+        });
+        
+        tl.fromTo(imgFrontRef.current, { y: 60 }, { y: -50, ease: 'none', duration: 2 }, 0);
+        tl.fromTo(imgFrontRef.current, { opacity: 0 }, { opacity: 1, ease: 'power2.out', duration: 1 }, 0);
+        tl.to(imgFrontRef.current, { opacity: 0.1, ease: 'power2.in', duration: 1 }, 1);
       }
 
       // Text block slides in from right

@@ -33,7 +33,7 @@ export default function ParticleSphere() {
         currentMouseY = targetMouseY;
       }
     };
-    
+
     const handleMouseLeave = () => {
       targetMouseX = -1000;
       targetMouseY = -1000;
@@ -45,8 +45,8 @@ export default function ParticleSphere() {
     // Create the massive fluid orbs using different shades of the Cyan/Blue family
     const orbs = [
       // Primary Cyan orb (Interactive, follows mouse)
-      { 
-        x: width * 0.5, y: height * 0.5, vx: 0.8, vy: 0.6, radius: Math.max(width, height) * 0.6, 
+      {
+        x: width * 0.5, y: height * 0.5, vx: 0.8, vy: 0.6, radius: Math.max(width, height) * 0.6,
         colors: [
           'rgba(150, 255, 255, 0.8)', // Center: Bright Cyan-White
           'rgba(0, 220, 255, 0.4)',   // Mid: Pure Cyan
@@ -54,8 +54,8 @@ export default function ParticleSphere() {
         ]
       },
       // Secondary Blue orb (Drifting slowly)
-      { 
-        x: width * 0.2, y: height * 0.8, vx: -0.4, vy: -0.5, radius: Math.max(width, height) * 0.7, 
+      {
+        x: width * 0.2, y: height * 0.8, vx: -0.4, vy: -0.5, radius: Math.max(width, height) * 0.7,
         colors: [
           'rgba(120, 200, 255, 0.6)', // Center: Soft Blue
           'rgba(0, 100, 255, 0.3)',   // Mid: Medium Blue
@@ -63,8 +63,8 @@ export default function ParticleSphere() {
         ]
       },
       // Tertiary Teal orb (Drifting slowly)
-      { 
-        x: width * 0.8, y: height * 0.2, vx: 0.5, vy: -0.3, radius: Math.max(width, height) * 0.8, 
+      {
+        x: width * 0.8, y: height * 0.2, vx: 0.5, vy: -0.3, radius: Math.max(width, height) * 0.8,
         colors: [
           'rgba(100, 255, 200, 0.5)', // Center: Bright Teal
           'rgba(0, 180, 150, 0.25)',  // Mid: Deep Teal
@@ -75,7 +75,7 @@ export default function ParticleSphere() {
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
-      
+
       // We want additive blending for a glowing aurora effect
       ctx.globalCompositeOperation = 'screen';
 
@@ -91,11 +91,11 @@ export default function ParticleSphere() {
 
       for (let i = 0; i < orbs.length; i++) {
         const orb = orbs[i];
-        
+
         // Lazy drifting physics
         orb.x += orb.vx;
         orb.y += orb.vy;
-        
+
         // Gentle bounce off screen edges (with a large buffer so they drift offscreen slightly)
         const buffer = orb.radius * 0.5;
         if (orb.x < -buffer || orb.x > width + buffer) orb.vx *= -1;
@@ -103,22 +103,22 @@ export default function ParticleSphere() {
 
         // The primary Cyan orb (index 0) acts as a flashlight and gently gravitates toward the cursor
         if (i === 0 && currentMouseX !== -1000) {
-            orb.x += (currentMouseX - orb.x) * 0.03;
-            orb.y += (currentMouseY - orb.y) * 0.03;
+          orb.x += (currentMouseX - orb.x) * 0.03;
+          orb.y += (currentMouseY - orb.y) * 0.03;
         }
-        
+
         // Draw the massive soft orb using a radial gradient with multiple shades
         const grad = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orb.radius);
         grad.addColorStop(0, orb.colors[0]);   // Center
         grad.addColorStop(0.5, orb.colors[1]); // Mid
         grad.addColorStop(1, orb.colors[2]);   // Edge
-        
+
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(orb.x, orb.y, orb.radius, 0, Math.PI * 2);
         ctx.fill();
       }
-      
+
       // Reset composite operation
       ctx.globalCompositeOperation = 'source-over';
 

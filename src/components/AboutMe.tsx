@@ -16,24 +16,22 @@ export default function AboutMe() {
     if (!el) return;
 
     const ctx = gsap.context(() => {
-      // Image: parallax float upward
+      // Image: parallax float upward with center fade in/out
       if (imgRef.current) {
-        gsap.fromTo(
-          imgRef.current,
-          { y: 60, opacity: 0, scale: 1.04 },
-          {
-            y: -20,
-            opacity: 1,
-            scale: 1,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: imgRef.current,
-              start: 'top 90%',
-              end: 'bottom 10%',
-              scrub: 1.5,
-            },
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: imgRef.current,
+            start: 'top 90%',
+            end: 'bottom 10%',
+            scrub: 1.5,
           }
-        );
+        });
+        
+        // Parallax movement
+        tl.fromTo(imgRef.current, { y: 60, scale: 1.04 }, { y: -20, scale: 1, ease: 'none', duration: 2 }, 0);
+        // Opacity fade in and fade out
+        tl.fromTo(imgRef.current, { opacity: 0 }, { opacity: 1, ease: 'power2.out', duration: 1 }, 0);
+        tl.to(imgRef.current, { opacity: 0.1, ease: 'power2.in', duration: 1 }, 1);
       }
 
       // Text paragraphs stagger
