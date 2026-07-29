@@ -42,122 +42,64 @@ export default function ParticleSphere() {
     window.addEventListener('mousemove', handleMouseMove);
     document.body.addEventListener('mouseleave', handleMouseLeave);
 
+    // Create the massive fluid orbs
+    const orbs = [
+      // Cyan orb (Interactive, follows mouse)
+      { x: width * 0.5, y: height * 0.5, vx: 0.8, vy: 0.6, radius: Math.max(width, height) * 0.4, color: [0, 240, 255], opacity: 0.12 },
+      // White orb (Drifting slowly)
+      { x: width * 0.2, y: height * 0.8, vx: -0.4, vy: -0.5, radius: Math.max(width, height) * 0.5, color: [255, 255, 255], opacity: 0.08 },
+      // Dark gray orb (Drifting slowly)
+      { x: width * 0.8, y: height * 0.2, vx: 0.5, vy: -0.3, radius: Math.max(width, height) * 0.6, color: [100, 100, 100], opacity: 0.15 }
+    ];
+
     const render = () => {
       ctx.clearRect(0, 0, width, height);
+      
+      // We want additive blending for a glowing aurora effect
+      ctx.globalCompositeOperation = 'screen';
 
       // Smooth mouse tracking
       if (targetMouseX !== -1000) {
-        currentMouseX += (targetMouseX - currentMouseX) * 0.1;
-        currentMouseY += (targetMouseY - currentMouseY) * 0.1;
+        currentMouseX += (targetMouseX - currentMouseX) * 0.05;
+        currentMouseY += (targetMouseY - currentMouseY) * 0.05;
       } else {
-        currentMouseX += (-1000 - currentMouseX) * 0.1;
-        currentMouseY += (-1000 - currentMouseY) * 0.1;
+        // Slowly drift back to center if mouse leaves
+        currentMouseX += (width / 2 - currentMouseX) * 0.02;
+        currentMouseY += (height / 2 - currentMouseY) * 0.02;
       }
 
-      // Grid settings
-      const spacing = 45; // Space between crosses
-      const cols = Math.ceil(width / spacing) + 1;
-      const rows = Math.ceil(height / spacing) + 1;
-      
-      const offsetX = (width - (cols - 1) * spacing) / 2;
-      const offsetY = (height - (rows - 1) * spacing) / 2;
-      
-      // 1. Draw base grid (faint white/gray)
-      ctx.beginPath();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-      ctx.lineWidth = 1;
-      
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const baseX = offsetX + c * spacing;
-          const baseY = offsetY + r * spacing;
-          
-          let x = baseX;
-          let y = baseY;
-          const size = 4;
-          
-          const dx = currentMouseX - baseX;
-          const dy = currentMouseY - baseY;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const magnetRadius = 250;
-          
-          let force = 0;
-          if (dist < magnetRadius) {
-            force = Math.pow((magnetRadius - dist) / magnetRadius, 2);
-          }
-          
-          // Only draw in the base path if it's NOT strongly affected by the mouse
-          if (force < 0.02) {
-             ctx.moveTo(x - size, y);
-             ctx.lineTo(x + size, y);
-             ctx.moveTo(x, y - size);
-             ctx.lineTo(x, y + size);
-          }
+      for (let i = 0; i < orbs.length; i++) {
+        const orb = orbs[i];
+        
+        // Lazy drifting physics
+        orb.x += orb.vx;
+        orb.y += orb.vy;
+        
+        // Gentle bounce off screen edges (with a large buffer so they drift offscreen slightly)
+        const buffer = orb.radius * 0.5;
+        if (orb.x < -buffer || orb.x > width + buffer) orb.vx *= -1;
+        if (orb.y < -buffer || orb.y > height + buffer) orb.vy *= -1;
+
+        // The primary Cyan orb (index 0) acts as a flashlight and gently gravitates toward the cursor
+        if (i === 0 && currentMouseX !== -1000) {
+            orb.x += (currentMouseX - orb.x) * 0.03;
+            orb.y += (currentMouseY - orb.y) * 0.03;
         }
-      }
-      ctx.stroke();
-
-      // 2. Draw highlighted/active crosses (Cyan + rotated + pushed away)
-      if (currentMouseX !== -1000) {
+        
+        // Draw the massive soft orb using a radial gradient
+        const grad = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orb.radius);
+        grad.addColorStop(0, `rgba(${orb.color[0]}, ${orb.color[1]}, ${orb.color[2]}, ${orb.opacity})`);
+        grad.addColorStop(0.5, `rgba(${orb.color[0]}, ${orb.color[1]}, ${orb.color[2]}, ${orb.opacity * 0.3})`);
+        grad.addColorStop(1, `rgba(${orb.color[0]}, ${orb.color[1]}, ${orb.color[2]}, 0)`);
+        
+        ctx.fillStyle = grad;
         ctx.beginPath();
-        for (let r = 0; r < rows; r++) {
-          for (let c = 0; c < cols; c++) {
-            const baseX = offsetX + c * spacing;
-            const baseY = offsetY + r * spacing;
-            
-            const dx = currentMouseX - baseX;
-            const dy = currentMouseY - baseY;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            const magnetRadius = 250;
-            
-            if (dist < magnetRadius) {
-              const force = Math.pow((magnetRadius - dist) / magnetRadius, 2);
-              
-              if (force >= 0.02) {
-                  // Push away slightly
-                  const pushDist = force * 20;
-                  const x = baseX - (dx / dist) * pushDist;
-                  const y = baseY - (dy / dist) * pushDist;
-                  
-                  // Scale up based on force
-                  const size = 4 + force * 6;
-                  
-                  // Rotate based on force (up to 45 degrees so it looks like an 'x' when close)
-                  const angle = force * Math.PI / 4;
-                  const cosA = Math.cos(angle);
-                  const sinA = Math.sin(angle);
-                  
-                  // Calculate rotated horizontal line of the '+'
-                  const hx1 = x - size * cosA;
-                  const hy1 = y - size * sinA;
-                  const hx2 = x + size * cosA;
-                  const hy2 = y + size * sinA;
-                  
-                  // Calculate rotated vertical line of the '+'
-                  const vx1 = x + size * sinA;
-                  const vy1 = y - size * cosA;
-                  const vx2 = x - size * sinA;
-                  const vy2 = y + size * cosA;
-                  
-                  ctx.moveTo(hx1, hy1);
-                  ctx.lineTo(hx2, hy2);
-                  ctx.moveTo(vx1, vy1);
-                  ctx.lineTo(vx2, vy2);
-              }
-            }
-          }
-        }
-        
-        // Draw all active crosses using a smooth radial gradient centered on the mouse!
-        const grad = ctx.createRadialGradient(currentMouseX, currentMouseY, 0, currentMouseX, currentMouseY, 250);
-        grad.addColorStop(0, 'rgba(0, 240, 255, 1)');
-        grad.addColorStop(0.5, 'rgba(0, 240, 255, 0.4)');
-        grad.addColorStop(1, 'rgba(0, 240, 255, 0)');
-        
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+        ctx.arc(orb.x, orb.y, orb.radius, 0, Math.PI * 2);
+        ctx.fill();
       }
+      
+      // Reset composite operation
+      ctx.globalCompositeOperation = 'source-over';
 
       animationFrameId = requestAnimationFrame(render);
     };
