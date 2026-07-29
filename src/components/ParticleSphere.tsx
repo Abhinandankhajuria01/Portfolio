@@ -80,7 +80,7 @@ export default function ParticleSphere() {
     document.body.addEventListener('mouseleave', handleMouseLeave);
     window.addEventListener('scroll', handleScroll, { passive: true });
 
-    const applyMagneticPull = (x: number, y: number) => {
+    const applyMagneticPull = (x: number, y: number, p: typeof particles[0]) => {
       if (currentMouseX === -1000) return { x, y, force: 0 };
       
       const dx = currentMouseX - x;
@@ -89,7 +89,9 @@ export default function ParticleSphere() {
       
       const dist = Math.sqrt(dx * dx + dy * dy);
       const magnetRadius = 400; 
-      const ringRadius = 120; 
+      // Personalize the ring radius per particle to break the perfect circle
+      // Uses the particle's phase to generate a static random value between 20px and 200px
+      const ringRadius = 110 + Math.sin(p.phaseX * 100) * 90; 
 
       if (dist < magnetRadius && dist > 0) {
         const targetDist = dist - ringRadius;
@@ -191,8 +193,8 @@ export default function ParticleSphere() {
         const screenX2 = width / 2 + futurePos.x * radius * scale2;
         const screenY2 = height / 2 + futurePos.y * radius * scale2;
 
-        const p1 = applyMagneticPull(proj.screenX, proj.screenY);
-        const p2 = applyMagneticPull(screenX2, screenY2);
+        const p1 = applyMagneticPull(proj.screenX, proj.screenY, proj.p);
+        const p2 = applyMagneticPull(screenX2, screenY2, proj.p);
 
         let alpha = Math.max(0.2, Math.min(1, proj.scale * 1.8));
         const pullForce = Math.max(p1.force, p2.force);
