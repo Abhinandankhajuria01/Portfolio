@@ -101,17 +101,18 @@ export default function MuseumOfFailures() {
     >
       <style>{`
         .carousel-3d-container {
-          perspective: 1000px;
+          perspective: 1200px;
           display: flex;
           justify-content: center;
           align-items: center;
-          height: 600px; /* fixed height for absolute positioned cards */
+          height: 500px; /* fixed height for absolute positioned cards */
         }
         
         .carousel-3d-ring {
+          --tz: 250px;
           position: relative;
-          width: 320px;
-          height: 420px;
+          width: 260px;
+          height: 380px;
           transform-style: preserve-3d;
           /* We apply animation that includes scale */
           animation: rotateRingMobile 30s linear infinite;
@@ -122,8 +123,8 @@ export default function MuseumOfFailures() {
         }
         
         @keyframes rotateRingMobile {
-          0% { transform: scale(0.75) rotateY(0deg); }
-          100% { transform: scale(0.75) rotateY(-360deg); }
+          0% { transform: scale(0.85) rotateY(0deg); }
+          100% { transform: scale(0.85) rotateY(-360deg); }
         }
         
         @keyframes rotateRingDesktop {
@@ -142,11 +143,12 @@ export default function MuseumOfFailures() {
         
         @media (min-width: 768px) {
           .carousel-3d-container {
-            height: 700px;
+            height: 600px;
           }
           .carousel-3d-ring {
-            width: 380px;
-            height: 450px;
+            --tz: 320px;
+            width: 300px;
+            height: 400px;
             animation: rotateRingDesktop 30s linear infinite;
           }
         }
@@ -177,13 +179,13 @@ export default function MuseumOfFailures() {
             {failures.map((failure, index) => {
               // 5 cards = 360 / 5 = 72 degrees each
               const rotateY = index * 72;
-              // Fixed TranslateZ to form the perfect circle (approx width * 0.85)
+              // Fixed TranslateZ dynamically controlled by CSS variable --tz
               return (
                 <div 
                   key={failure.id} 
                   className="carousel-3d-card"
                   style={{
-                    transform: `rotateY(${rotateY}deg) translateZ(420px)`
+                    transform: `rotateY(${rotateY}deg) translateZ(var(--tz))`
                   }}
                 >
                   <motion.div
