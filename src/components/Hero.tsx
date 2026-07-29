@@ -8,7 +8,7 @@ export default function Hero() {
   const opacityBg = useTransform(scrollY, [0, 800], [1, 0]);
 
   return (
-    <section className="relative min-h-0 md:min-h-[90vh] flex flex-col items-center justify-center bg-black mb-0 md:mb-24 pt-16 pb-6 md:py-0 overflow-hidden">
+    <section className="relative min-h-0 md:min-h-[90vh] flex flex-col items-center justify-center bg-black mb-0 md:mb-24 pt-16 pb-6 md:py-0">
       {/* 3D Particle Sphere Background */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <motion.div 
