@@ -276,6 +276,9 @@ export default function MuseumOfFailures() {
             Every successful launch is built on a graveyard of terrible ideas, broken code, and bad decisions.
             Here are a few of my favorite missteps and what they taught me.
           </p>
+          <p className="text-gray-300 max-w-2xl mx-auto text-lg leading-relaxed mt-4 italic">
+            "Whatever I am today, my failures contributed just as much as my achievements. I couldn't be the person I am without them."
+          </p>
         </div>
       </div>
 
