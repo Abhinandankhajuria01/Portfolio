@@ -18,25 +18,24 @@ export default function ParticleSphere() {
     };
     window.addEventListener('resize', handleResize);
 
-    // Create particles using Fibonacci sphere distribution
-    const particles: { x: number; y: number; z: number; size: number; length: number }[] = [];
-    const numParticles = 700; // Reduced density for a cleaner, more minimalist look
-    const phi = Math.PI * (3 - Math.sqrt(5));
+    // Create particles with random 3D positions and wave phases
+    const particles: { x: number; y: number; z: number; size: number; length: number; phaseX: number; phaseY: number }[] = [];
+    const numParticles = 800; // Good density for a random cloud
 
     for (let i = 0; i < numParticles; i++) {
-      const y = 1 - (i / (numParticles - 1)) * 2;
-      const r = Math.sqrt(1 - y * y);
-      const theta = phi * i;
-
-      const x = Math.cos(theta) * r;
-      const z = Math.sin(theta) * r;
+      // Random coordinates between -1 and 1 (a cube volume)
+      const x = (Math.random() - 0.5) * 2;
+      const y = (Math.random() - 0.5) * 2;
+      const z = (Math.random() - 0.5) * 2;
 
       particles.push({
         x,
         y,
         z,
-        size: Math.random() * 0.8 + 0.2, // Thinner lines
-        length: Math.random() * 0.03 + 0.015, // Slightly shorter dashes
+        size: Math.random() * 2 + 1, // Thicker particles (1 to 3px)
+        length: Math.random() * 0.015 + 0.005, // Shorter dashes
+        phaseX: Math.random() * Math.PI * 2,
+        phaseY: Math.random() * Math.PI * 2,
       });
     }
 
@@ -65,12 +64,11 @@ export default function ParticleSphere() {
     document.body.addEventListener('mouseleave', handleMouseLeave);
     window.addEventListener('scroll', handleScroll, { passive: true });
 
-    // Helper for mouse attraction (magnetic pull in 2D space)
     const applyMagneticPull = (x: number, y: number) => {
       const dx = mouseX - x;
       const dy = mouseY - y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const magnetRadius = 300; // Radius of attraction
+      const magnetRadius = 300; 
 
       if (dist < magnetRadius && dist > 0) {
         const force = Math.pow((magnetRadius - dist) / magnetRadius, 2);
@@ -78,41 +76,49 @@ export default function ParticleSphere() {
         return {
           x: x + dx * force * strength,
           y: y + dy * force * strength,
-          force // Return force to use for color/glow
+          force
         };
       }
       return { x, y, force: 0 };
     };
 
+    // Helper to calculate a particle's position in the wave field at a given time
+    const getWavePosition = (p: typeof particles[0], t: number, scrollOffset: number) => {
+      // Wave parameters influenced by their original position and time
+      // Scroll moves the wave vertically
+      const scrollWave = scrollOffset * 0.001;
+      
+      const waveX = Math.sin(p.y * 3 + t * 2 + p.phaseX) * 0.2 + Math.cos(p.z * 2 + t) * 0.1;
+      const waveY = Math.cos(p.x * 3 + t * 1.5 + scrollWave + p.phaseY) * 0.2;
+      const waveZ = Math.sin(p.x * 4 + t * 1.2) * 0.2;
+
+      return {
+        x: p.x + waveX,
+        y: p.y + waveY,
+        z: p.z + waveZ
+      };
+    };
+
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      time += 0.0015; // Slightly slower, more elegant rotation
+      time += 0.002; // Speed of the wave undulation
 
-      const radius = Math.min(width, height) * 0.45;
+      const radius = Math.min(width, height) * 0.6; // Spread of the cloud
       const focalLength = 350;
       
-      const currentRotY = time + scrollYOffset * 0.001;
-      const currentRotX = -0.3 + scrollYOffset * 0.0002; // Less aggressive tilt
-      const currentRotZ = 0.1;
-
       const projected = particles.map((p) => {
-        const x1 = p.x * Math.cos(currentRotY) - p.z * Math.sin(currentRotY);
-        const z1 = p.x * Math.sin(currentRotY) + p.z * Math.cos(currentRotY);
+        // Calculate position at current time
+        const pos = getWavePosition(p, time, scrollYOffset);
 
-        const y2 = p.y * Math.cos(currentRotX) - z1 * Math.sin(currentRotX);
-        const z2_tmp = p.y * Math.sin(currentRotX) + z1 * Math.cos(currentRotX);
+        // Push the cloud back slightly so z doesn't cross the camera
+        const cameraZ = pos.z * 200 + 250;
+        const scale = focalLength / (focalLength + cameraZ);
 
-        const x2 = x1 * Math.cos(currentRotZ) - y2 * Math.sin(currentRotZ);
-        const y3 = x1 * Math.sin(currentRotZ) + y2 * Math.cos(currentRotZ);
-        const z2 = z2_tmp;
+        const screenX = width / 2 + pos.x * radius * scale;
+        const screenY = height / 2 + pos.y * radius * scale;
 
-        const scale = focalLength / (focalLength + z2 * 200);
-
-        const screenX = width / 2 + x2 * radius * scale;
-        const screenY = height / 2 + y3 * radius * scale;
-
-        return { screenX, screenY, scale, z: z2, p };
+        return { screenX, screenY, scale, z: pos.z, p };
       });
 
       projected.sort((a, b) => b.z - a.z);
@@ -122,33 +128,26 @@ export default function ParticleSphere() {
 
         ctx.beginPath();
 
+        // Calculate a trailing point slightly ahead in time to draw a short dash along the flow
         const dt = proj.p.length;
-        const rotY2 = currentRotY + dt;
-        const x1_2 = proj.p.x * Math.cos(rotY2) - proj.p.z * Math.sin(rotY2);
-        const z1_2 = proj.p.x * Math.sin(rotY2) + proj.p.z * Math.cos(rotY2);
-
-        const y2_2 = proj.p.y * Math.cos(currentRotX) - z1_2 * Math.sin(currentRotX);
-        const z2_tmp_2 = proj.p.y * Math.sin(currentRotX) + z1_2 * Math.cos(currentRotX);
-
-        const x2_2 = x1_2 * Math.cos(currentRotZ) - y2_2 * Math.sin(currentRotZ);
-        const y3_2 = x1_2 * Math.sin(currentRotZ) + y2_2 * Math.cos(currentRotZ);
-        const z2_2 = z2_tmp_2;
-
-        const scale2 = focalLength / (focalLength + z2_2 * 200);
-        const screenX2 = width / 2 + x2_2 * radius * scale2;
-        const screenY2 = height / 2 + y3_2 * radius * scale2;
+        const futurePos = getWavePosition(proj.p, time + dt, scrollYOffset);
+        
+        const futureCameraZ = futurePos.z * 200 + 250;
+        const scale2 = focalLength / (focalLength + futureCameraZ);
+        
+        const screenX2 = width / 2 + futurePos.x * radius * scale2;
+        const screenY2 = height / 2 + futurePos.y * radius * scale2;
 
         const p1 = applyMagneticPull(proj.screenX, proj.screenY);
         const p2 = applyMagneticPull(screenX2, screenY2);
 
-        // Base opacity is lower for a subtle background feel
-        let alpha = Math.max(0.05, Math.min(1, proj.scale * 0.8 - 0.2));
+        // Base opacity based on depth scale
+        let alpha = Math.max(0.05, Math.min(1, proj.scale * 0.8));
         
-        // If the particle is being pulled by the cursor, boost its opacity and give it a cyan glow
+        // Boost opacity and add cyan glow if magnetically pulled
         const pullForce = Math.max(p1.force, p2.force);
         
         if (pullForce > 0) {
-          // Transition to cyan (#00f0ff) when pulled, otherwise stay sleek white/gray
           const cyanIntensity = Math.min(1, pullForce * 2);
           ctx.strokeStyle = `rgba(${255 - cyanIntensity * 255}, ${255 - cyanIntensity * 15}, ${255}, ${alpha + pullForce * 0.5})`;
           ctx.shadowBlur = cyanIntensity * 10;
@@ -158,7 +157,7 @@ export default function ParticleSphere() {
           ctx.shadowBlur = 0;
         }
 
-        ctx.lineWidth = proj.p.size * proj.scale; // Thinner, sharper lines
+        ctx.lineWidth = proj.p.size * proj.scale; // Thicker lines based on new size logic
         ctx.lineCap = 'round';
 
         ctx.moveTo(p1.x, p1.y);
