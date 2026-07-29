@@ -85,18 +85,30 @@ export default function ParticleSphere() {
       
       const dx = currentMouseX - x;
       const dy = currentMouseY - y;
-      // Fast distance approximation to avoid Math.sqrt when far away
-      if (Math.abs(dx) > 350 || Math.abs(dy) > 350) return { x, y, force: 0 };
+      if (Math.abs(dx) > 400 || Math.abs(dy) > 400) return { x, y, force: 0 };
       
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const magnetRadius = 350; 
+      const magnetRadius = 400; // Total area of effect
+      const ringRadius = 120; // The radius of the empty circle they form around the cursor
 
       if (dist < magnetRadius && dist > 0) {
+        // Distance from the desired ring perimeter
+        // Positive means it's outside the ring (pull in). Negative means it's inside the ring (push out).
+        const targetDist = dist - ringRadius;
+        
+        // Easing function: stronger pull near the ring, weaker as it approaches magnetRadius
         const force = Math.pow((magnetRadius - dist) / magnetRadius, 2);
-        const strength = 0.5; 
+        
+        // How strongly they snap to the ring
+        const strength = 0.8; 
+        
+        // Vector to move the particle towards the ring
+        const moveX = (dx / dist) * targetDist;
+        const moveY = (dy / dist) * targetDist;
+        
         return {
-          x: x + dx * force * strength,
-          y: y + dy * force * strength,
+          x: x + moveX * force * strength,
+          y: y + moveY * force * strength,
           force
         };
       }
@@ -120,14 +132,15 @@ export default function ParticleSphere() {
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      time += 0.002; 
+      time += 0.0008; // Significantly slowed down for a very smooth, relaxing pace
       
       if (targetMouseX !== -1000) {
-        currentMouseX += (targetMouseX - currentMouseX) * 0.08;
-        currentMouseY += (targetMouseY - currentMouseY) * 0.08;
+        // Slower mouse interpolation for smoother trailing
+        currentMouseX += (targetMouseX - currentMouseX) * 0.04;
+        currentMouseY += (targetMouseY - currentMouseY) * 0.04;
       } else {
-        currentMouseX += (-1000 - currentMouseX) * 0.08;
-        currentMouseY += (-1000 - currentMouseY) * 0.08;
+        currentMouseX += (-1000 - currentMouseX) * 0.04;
+        currentMouseY += (-1000 - currentMouseY) * 0.04;
       }
 
       const radius = Math.min(width, height) * 0.6;
