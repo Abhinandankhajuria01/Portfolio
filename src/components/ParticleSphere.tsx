@@ -20,12 +20,12 @@ export default function ParticleSphere() {
 
     // Create particles using Fibonacci sphere distribution
     const particles: { x: number; y: number; z: number; size: number; length: number }[] = [];
-    const numParticles = 900;
+    const numParticles = 700; // Reduced density for a cleaner, more minimalist look
     const phi = Math.PI * (3 - Math.sqrt(5));
 
     for (let i = 0; i < numParticles; i++) {
-      const y = 1 - (i / (numParticles - 1)) * 2; // y goes from 1 to -1
-      const r = Math.sqrt(1 - y * y); // radius at y
+      const y = 1 - (i / (numParticles - 1)) * 2;
+      const r = Math.sqrt(1 - y * y);
       const theta = phi * i;
 
       const x = Math.cos(theta) * r;
@@ -35,8 +35,8 @@ export default function ParticleSphere() {
         x,
         y,
         z,
-        size: Math.random() * 1.5 + 0.5,
-        length: Math.random() * 0.04 + 0.02, // Dash length factor
+        size: Math.random() * 0.8 + 0.2, // Thinner lines
+        length: Math.random() * 0.03 + 0.015, // Slightly shorter dashes
       });
     }
 
@@ -52,7 +52,6 @@ export default function ParticleSphere() {
       mouseY = e.clientY;
     };
     
-    // Add mouseleave to reset magnet when cursor leaves
     const handleMouseLeave = () => {
       mouseX = -1000;
       mouseY = -1000;
@@ -71,42 +70,36 @@ export default function ParticleSphere() {
       const dx = mouseX - x;
       const dy = mouseY - y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const magnetRadius = 250; // Radius of attraction
+      const magnetRadius = 300; // Radius of attraction
 
       if (dist < magnetRadius && dist > 0) {
-        // Easing function for smooth pull (stronger closer to center)
         const force = Math.pow((magnetRadius - dist) / magnetRadius, 2);
-        // Pull strength (max 50% of the distance to the cursor)
-        const strength = 0.5;
+        const strength = 0.4;
         return {
           x: x + dx * force * strength,
-          y: y + dy * force * strength
+          y: y + dy * force * strength,
+          force // Return force to use for color/glow
         };
       }
-      return { x, y };
+      return { x, y, force: 0 };
     };
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      time += 0.002;
+      time += 0.0015; // Slightly slower, more elegant rotation
 
-      // Make sphere responsive to screen size
       const radius = Math.min(width, height) * 0.45;
       const focalLength = 350;
       
-      // Calculate dynamic rotation based on time + scroll
-      const currentRotY = time + scrollYOffset * 0.0015;
-      const currentRotX = -0.4 + scrollYOffset * 0.0003;
-      const currentRotZ = 0.2;
+      const currentRotY = time + scrollYOffset * 0.001;
+      const currentRotX = -0.3 + scrollYOffset * 0.0002; // Less aggressive tilt
+      const currentRotZ = 0.1;
 
-      // Project and sort particles
       const projected = particles.map((p) => {
-        // Rotate around Y axis
         const x1 = p.x * Math.cos(currentRotY) - p.z * Math.sin(currentRotY);
         const z1 = p.x * Math.sin(currentRotY) + p.z * Math.cos(currentRotY);
 
-        // Rotate around X and Z axis slightly to tilt the sphere
         const y2 = p.y * Math.cos(currentRotX) - z1 * Math.sin(currentRotX);
         const z2_tmp = p.y * Math.sin(currentRotX) + z1 * Math.cos(currentRotX);
 
@@ -122,15 +115,13 @@ export default function ParticleSphere() {
         return { screenX, screenY, scale, z: z2, p };
       });
 
-      // Draw back to front
       projected.sort((a, b) => b.z - a.z);
 
       projected.forEach((proj) => {
-        if (proj.z > 2) return; // Culling
+        if (proj.z > 2) return; 
 
         ctx.beginPath();
 
-        // Calculate a trailing point to draw a dash slightly ahead in time
         const dt = proj.p.length;
         const rotY2 = currentRotY + dt;
         const x1_2 = proj.p.x * Math.cos(rotY2) - proj.p.z * Math.sin(rotY2);
@@ -147,19 +138,27 @@ export default function ParticleSphere() {
         const screenX2 = width / 2 + x2_2 * radius * scale2;
         const screenY2 = height / 2 + y3_2 * radius * scale2;
 
-        // Apply magnetic pull to both start and end points of the dash
         const p1 = applyMagneticPull(proj.screenX, proj.screenY);
         const p2 = applyMagneticPull(screenX2, screenY2);
 
-        const alpha = Math.max(0.1, Math.min(1, proj.scale * 1.5 - 0.2));
+        // Base opacity is lower for a subtle background feel
+        let alpha = Math.max(0.05, Math.min(1, proj.scale * 0.8 - 0.2));
+        
+        // If the particle is being pulled by the cursor, boost its opacity and give it a cyan glow
+        const pullForce = Math.max(p1.force, p2.force);
+        
+        if (pullForce > 0) {
+          // Transition to cyan (#00f0ff) when pulled, otherwise stay sleek white/gray
+          const cyanIntensity = Math.min(1, pullForce * 2);
+          ctx.strokeStyle = `rgba(${255 - cyanIntensity * 255}, ${255 - cyanIntensity * 15}, ${255}, ${alpha + pullForce * 0.5})`;
+          ctx.shadowBlur = cyanIntensity * 10;
+          ctx.shadowColor = '#00f0ff';
+        } else {
+          ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+          ctx.shadowBlur = 0;
+        }
 
-        // Color mapping based on screen X position (Blue to Orange/Red)
-        const pct = Math.max(0, Math.min(1, p1.x / width));
-        // Hue mapping: left (pct=0) is blue (240), right (pct=1) is red (0)
-        const hue = 240 - pct * 240;
-
-        ctx.strokeStyle = `hsla(${hue}, 90%, 65%, ${alpha})`;
-        ctx.lineWidth = proj.p.size * proj.scale * 1.5;
+        ctx.lineWidth = proj.p.size * proj.scale; // Thinner, sharper lines
         ctx.lineCap = 'round';
 
         ctx.moveTo(p1.x, p1.y);
