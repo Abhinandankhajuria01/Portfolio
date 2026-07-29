@@ -18,31 +18,12 @@ export default function ParticleSphere() {
     };
     window.addEventListener('resize', handleResize);
 
-    // Create a 60x60 grid for the wireframe terrain
-    const cols = 60;
-    const rows = 60;
-    
-    const points: { gridX: number; gridZ: number; }[] = [];
-    const projected: { x: number; y: number; z: number; force: number }[] = [];
-
-    for (let z = 0; z < rows; z++) {
-      for (let x = 0; x < cols; x++) {
-        points.push({
-          gridX: (x - cols / 2) * 2.5, // Spread the grid
-          gridZ: (z - rows / 2) * 2.5,
-        });
-        projected.push({ x: 0, y: 0, z: 0, force: 0 });
-      }
-    }
-
-    let time = 0;
     let animationFrameId: number;
 
     let targetMouseX = -1000;
     let targetMouseY = -1000;
     let currentMouseX = -1000;
     let currentMouseY = -1000;
-    let scrollYOffset = window.scrollY;
 
     const handleMouseMove = (e: MouseEvent) => {
       targetMouseX = e.clientX;
@@ -58,149 +39,125 @@ export default function ParticleSphere() {
       targetMouseY = -1000;
     };
 
-    const handleScroll = () => {
-      scrollYOffset = window.scrollY;
-    };
-
     window.addEventListener('mousemove', handleMouseMove);
     document.body.addEventListener('mouseleave', handleMouseLeave);
-    window.addEventListener('scroll', handleScroll, { passive: true });
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      time += 0.015; // Speed of the ocean waves
-      
       // Smooth mouse tracking
       if (targetMouseX !== -1000) {
-        currentMouseX += (targetMouseX - currentMouseX) * 0.08;
-        currentMouseY += (targetMouseY - currentMouseY) * 0.08;
+        currentMouseX += (targetMouseX - currentMouseX) * 0.1;
+        currentMouseY += (targetMouseY - currentMouseY) * 0.1;
       } else {
-        currentMouseX += (-1000 - currentMouseX) * 0.08;
-        currentMouseY += (-1000 - currentMouseY) * 0.08;
+        currentMouseX += (-1000 - currentMouseX) * 0.1;
+        currentMouseY += (-1000 - currentMouseY) * 0.1;
       }
 
-      const focalLength = 400;
-      // Fixed rotation to look down at the terrain, plus slight shift on scroll
-      const rotX = 1.25; 
-      // Parallax rotation based on mouse X, gives a subtle 3D perspective shift
-      const normMouseX = currentMouseX !== -1000 ? (currentMouseX / width) * 2 - 1 : 0;
-      const rotY = scrollYOffset * 0.0002 + normMouseX * 0.15; 
+      // Grid settings
+      const spacing = 45; // Space between crosses
+      const cols = Math.ceil(width / spacing) + 1;
+      const rows = Math.ceil(height / spacing) + 1;
       
-      // 1. Calculate 3D positions and project to 2D
-      for (let i = 0; i < points.length; i++) {
-        const p = points[i];
-        const proj = projected[i];
-        
-        // Base undulation (ocean waves)
-        let y = Math.sin(p.gridX * 0.15 + time) * 1.5 + Math.cos(p.gridZ * 0.15 + time * 0.8) * 1.5;
-        
-        // 3D Rotations
-        const x1 = p.gridX * Math.cos(rotY) - p.gridZ * Math.sin(rotY);
-        const z1 = p.gridX * Math.sin(rotY) + p.gridZ * Math.cos(rotY);
-        
-        const y2 = y * Math.cos(rotX) - z1 * Math.sin(rotX);
-        const z2 = y * Math.sin(rotX) + z1 * Math.cos(rotX);
-        
-        const cameraZ = z2 + 60; // Push terrain into the screen
-        
-        proj.z = cameraZ;
-        proj.force = 0;
-
-        if (cameraZ > 0) {
-          const scale = focalLength / (focalLength + cameraZ);
-          proj.x = width / 2 + x1 * 20 * scale;
-          // Center terrain lower on the screen
-          proj.y = height / 2 + 150 + y2 * 20 * scale; 
+      const offsetX = (width - (cols - 1) * spacing) / 2;
+      const offsetY = (height - (rows - 1) * spacing) / 2;
+      
+      // 1. Draw base grid (faint white/gray)
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.lineWidth = 1;
+      
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const baseX = offsetX + c * spacing;
+          const baseY = offsetY + r * spacing;
           
-          // Apply magnetic crater effect in screen space
-          if (currentMouseX !== -1000) {
-            const dx = currentMouseX - proj.x;
-            const dy = currentMouseY - proj.y;
+          let x = baseX;
+          let y = baseY;
+          const size = 4;
+          
+          const dx = currentMouseX - baseX;
+          const dy = currentMouseY - baseY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const magnetRadius = 250;
+          
+          let force = 0;
+          if (dist < magnetRadius) {
+            force = Math.pow((magnetRadius - dist) / magnetRadius, 2);
+          }
+          
+          // Only draw in the base path if it's NOT strongly affected by the mouse
+          if (force < 0.02) {
+             ctx.moveTo(x - size, y);
+             ctx.lineTo(x + size, y);
+             ctx.moveTo(x, y - size);
+             ctx.lineTo(x, y + size);
+          }
+        }
+      }
+      ctx.stroke();
+
+      // 2. Draw highlighted/active crosses (Cyan + rotated + pushed away)
+      if (currentMouseX !== -1000) {
+        ctx.beginPath();
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const baseX = offsetX + c * spacing;
+            const baseY = offsetY + r * spacing;
+            
+            const dx = currentMouseX - baseX;
+            const dy = currentMouseY - baseY;
             const dist = Math.sqrt(dx * dx + dy * dy);
             const magnetRadius = 250;
             
             if (dist < magnetRadius) {
               const force = Math.pow((magnetRadius - dist) / magnetRadius, 2);
-              proj.force = force;
-              // Push points DOWN (bending the terrain) and slightly AWAY
-              proj.y += force * 80 * scale;
-              proj.x -= (dx / dist) * force * 20 * scale;
+              
+              if (force >= 0.02) {
+                  // Push away slightly
+                  const pushDist = force * 20;
+                  const x = baseX - (dx / dist) * pushDist;
+                  const y = baseY - (dy / dist) * pushDist;
+                  
+                  // Scale up based on force
+                  const size = 4 + force * 6;
+                  
+                  // Rotate based on force (up to 45 degrees so it looks like an 'x' when close)
+                  const angle = force * Math.PI / 4;
+                  const cosA = Math.cos(angle);
+                  const sinA = Math.sin(angle);
+                  
+                  // Calculate rotated horizontal line of the '+'
+                  const hx1 = x - size * cosA;
+                  const hy1 = y - size * sinA;
+                  const hx2 = x + size * cosA;
+                  const hy2 = y + size * sinA;
+                  
+                  // Calculate rotated vertical line of the '+'
+                  const vx1 = x + size * sinA;
+                  const vy1 = y - size * cosA;
+                  const vx2 = x - size * sinA;
+                  const vy2 = y + size * cosA;
+                  
+                  ctx.moveTo(hx1, hy1);
+                  ctx.lineTo(hx2, hy2);
+                  ctx.moveTo(vx1, vy1);
+                  ctx.lineTo(vx2, vy2);
+              }
             }
           }
         }
+        
+        // Draw all active crosses using a smooth radial gradient centered on the mouse!
+        const grad = ctx.createRadialGradient(currentMouseX, currentMouseY, 0, currentMouseX, currentMouseY, 250);
+        grad.addColorStop(0, 'rgba(0, 240, 255, 1)');
+        grad.addColorStop(0.5, 'rgba(0, 240, 255, 0.4)');
+        grad.addColorStop(1, 'rgba(0, 240, 255, 0)');
+        
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
       }
-
-      // 2. Draw the base wireframe grid
-      ctx.beginPath();
-      // Horizontal lines
-      for (let z = 0; z < rows; z++) {
-        let first = true;
-        for (let x = 0; x < cols; x++) {
-          const proj = projected[z * cols + x];
-          if (proj.z <= 0) { first = true; continue; }
-          
-          if (first) {
-            ctx.moveTo(proj.x, proj.y);
-            first = false;
-          } else {
-            ctx.lineTo(proj.x, proj.y);
-          }
-        }
-      }
-      // Vertical lines
-      for (let x = 0; x < cols; x++) {
-        let first = true;
-        for (let z = 0; z < rows; z++) {
-          const proj = projected[z * cols + x];
-          if (proj.z <= 0) { first = true; continue; }
-          
-          if (first) {
-            ctx.moveTo(proj.x, proj.y);
-            first = false;
-          } else {
-            ctx.lineTo(proj.x, proj.y);
-          }
-        }
-      }
-      
-      // Global gradient so it fades smoothly into the black distance (top of screen)
-      const grad = ctx.createLinearGradient(0, height * 0.1, 0, height * 0.9);
-      grad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-      grad.addColorStop(1, 'rgba(255, 255, 255, 0.25)');
-      
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = 1;
-      ctx.lineJoin = 'round';
-      ctx.stroke();
-
-      // 3. Draw the active/highlighted grid near the cursor
-      ctx.beginPath();
-      for (let z = 0; z < rows - 1; z++) {
-        for (let x = 0; x < cols - 1; x++) {
-          const idx = z * cols + x;
-          const proj = projected[idx];
-          
-          if (proj.force > 0.05 && proj.z > 0) {
-            const right = projected[idx + 1];
-            const down = projected[idx + cols];
-            
-            if (right && right.z > 0) {
-              ctx.moveTo(proj.x, proj.y);
-              ctx.lineTo(right.x, right.y);
-            }
-            if (down && down.z > 0) {
-              ctx.moveTo(proj.x, proj.y);
-              ctx.lineTo(down.x, down.y);
-            }
-          }
-        }
-      }
-      
-      // Cyan highlight for the crater area
-      ctx.strokeStyle = 'rgba(0, 240, 255, 0.8)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
 
       animationFrameId = requestAnimationFrame(render);
     };
@@ -211,7 +168,6 @@ export default function ParticleSphere() {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
       document.body.removeEventListener('mouseleave', handleMouseLeave);
-      window.removeEventListener('scroll', handleScroll);
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
