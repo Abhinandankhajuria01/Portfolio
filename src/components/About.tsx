@@ -58,8 +58,8 @@ export default function About() {
           stagger: 0.12,
           ease: 'power2.out',
           scrollTrigger: {
-            trigger: validCards[0] || el,
-            start: 'top 80%',
+            trigger: headingRef.current || el,
+            start: 'top 85%',
           },
         }
       );
