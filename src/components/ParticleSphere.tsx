@@ -42,14 +42,35 @@ export default function ParticleSphere() {
     window.addEventListener('mousemove', handleMouseMove);
     document.body.addEventListener('mouseleave', handleMouseLeave);
 
-    // Create the massive fluid orbs
+    // Create the massive fluid orbs using different shades of the Cyan/Blue family
     const orbs = [
-      // Cyan orb (Interactive, follows mouse)
-      { x: width * 0.5, y: height * 0.5, vx: 0.8, vy: 0.6, radius: Math.max(width, height) * 0.6, color: [0, 240, 255], opacity: 0.6 },
-      // White orb (Drifting slowly)
-      { x: width * 0.2, y: height * 0.8, vx: -0.4, vy: -0.5, radius: Math.max(width, height) * 0.7, color: [255, 255, 255], opacity: 0.4 },
-      // Dark gray orb (Drifting slowly)
-      { x: width * 0.8, y: height * 0.2, vx: 0.5, vy: -0.3, radius: Math.max(width, height) * 0.8, color: [150, 150, 150], opacity: 0.5 }
+      // Primary Cyan orb (Interactive, follows mouse)
+      { 
+        x: width * 0.5, y: height * 0.5, vx: 0.8, vy: 0.6, radius: Math.max(width, height) * 0.6, 
+        colors: [
+          'rgba(150, 255, 255, 0.8)', // Center: Bright Cyan-White
+          'rgba(0, 220, 255, 0.4)',   // Mid: Pure Cyan
+          'rgba(0, 60, 180, 0)'       // Edge: Deep Blue
+        ]
+      },
+      // Secondary Blue orb (Drifting slowly)
+      { 
+        x: width * 0.2, y: height * 0.8, vx: -0.4, vy: -0.5, radius: Math.max(width, height) * 0.7, 
+        colors: [
+          'rgba(120, 200, 255, 0.6)', // Center: Soft Blue
+          'rgba(0, 100, 255, 0.3)',   // Mid: Medium Blue
+          'rgba(0, 20, 100, 0)'       // Edge: Midnight Blue
+        ]
+      },
+      // Tertiary Teal orb (Drifting slowly)
+      { 
+        x: width * 0.8, y: height * 0.2, vx: 0.5, vy: -0.3, radius: Math.max(width, height) * 0.8, 
+        colors: [
+          'rgba(100, 255, 200, 0.5)', // Center: Bright Teal
+          'rgba(0, 180, 150, 0.25)',  // Mid: Deep Teal
+          'rgba(0, 50, 50, 0)'        // Edge: Dark Sea Green
+        ]
+      }
     ];
 
     const render = () => {
@@ -86,11 +107,11 @@ export default function ParticleSphere() {
             orb.y += (currentMouseY - orb.y) * 0.03;
         }
         
-        // Draw the massive soft orb using a radial gradient
+        // Draw the massive soft orb using a radial gradient with multiple shades
         const grad = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orb.radius);
-        grad.addColorStop(0, `rgba(${orb.color[0]}, ${orb.color[1]}, ${orb.color[2]}, ${orb.opacity})`);
-        grad.addColorStop(0.6, `rgba(${orb.color[0]}, ${orb.color[1]}, ${orb.color[2]}, ${orb.opacity * 0.6})`);
-        grad.addColorStop(1, `rgba(${orb.color[0]}, ${orb.color[1]}, ${orb.color[2]}, 0)`);
+        grad.addColorStop(0, orb.colors[0]);   // Center
+        grad.addColorStop(0.5, orb.colors[1]); // Mid
+        grad.addColorStop(1, orb.colors[2]);   // Edge
         
         ctx.fillStyle = grad;
         ctx.beginPath();
