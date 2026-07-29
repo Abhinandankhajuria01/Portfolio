@@ -45,11 +45,11 @@ export default function ParticleSphere() {
     // Create the massive fluid orbs
     const orbs = [
       // Cyan orb (Interactive, follows mouse)
-      { x: width * 0.5, y: height * 0.5, vx: 0.8, vy: 0.6, radius: Math.max(width, height) * 0.4, color: [0, 240, 255], opacity: 0.12 },
+      { x: width * 0.5, y: height * 0.5, vx: 0.8, vy: 0.6, radius: Math.max(width, height) * 0.6, color: [0, 240, 255], opacity: 0.6 },
       // White orb (Drifting slowly)
-      { x: width * 0.2, y: height * 0.8, vx: -0.4, vy: -0.5, radius: Math.max(width, height) * 0.5, color: [255, 255, 255], opacity: 0.08 },
+      { x: width * 0.2, y: height * 0.8, vx: -0.4, vy: -0.5, radius: Math.max(width, height) * 0.7, color: [255, 255, 255], opacity: 0.4 },
       // Dark gray orb (Drifting slowly)
-      { x: width * 0.8, y: height * 0.2, vx: 0.5, vy: -0.3, radius: Math.max(width, height) * 0.6, color: [100, 100, 100], opacity: 0.15 }
+      { x: width * 0.8, y: height * 0.2, vx: 0.5, vy: -0.3, radius: Math.max(width, height) * 0.8, color: [150, 150, 150], opacity: 0.5 }
     ];
 
     const render = () => {
@@ -89,7 +89,7 @@ export default function ParticleSphere() {
         // Draw the massive soft orb using a radial gradient
         const grad = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orb.radius);
         grad.addColorStop(0, `rgba(${orb.color[0]}, ${orb.color[1]}, ${orb.color[2]}, ${orb.opacity})`);
-        grad.addColorStop(0.5, `rgba(${orb.color[0]}, ${orb.color[1]}, ${orb.color[2]}, ${orb.opacity * 0.3})`);
+        grad.addColorStop(0.6, `rgba(${orb.color[0]}, ${orb.color[1]}, ${orb.color[2]}, ${orb.opacity * 0.6})`);
         grad.addColorStop(1, `rgba(${orb.color[0]}, ${orb.color[1]}, ${orb.color[2]}, 0)`);
         
         ctx.fillStyle = grad;
