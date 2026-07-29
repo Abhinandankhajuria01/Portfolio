@@ -146,32 +146,42 @@ export default function MuseumOfFailures() {
           }
 
           const cardCenter = rect.left + rect.width / 2;
-          let dist = (cardCenter - containerCenter) / (containerRect.width / 2);
-          dist = Math.max(-2, Math.min(2, dist));
-          
-          return { card, innerCard: card.children[0] as HTMLElement, dist, index };
+          return { card, innerCard: card.children[0] as HTMLElement, cardCenter, index };
         });
 
-        // 2. STRICT WRITE PHASE: Apply all style changes without querying the DOM layout
+        // Find focal point (either center of screen, or center of hovered card)
         const isEdgePanning = hoverDirection.current !== null;
+        let focalCenter = containerCenter;
+        
+        if (!isEdgePanning && hoveredCardIndex.current !== null) {
+          const hoveredMeasurement = cardMeasurements.find(m => m && m.index === hoveredCardIndex.current);
+          if (hoveredMeasurement) {
+            focalCenter = hoveredMeasurement.cardCenter;
+          }
+        }
 
+        // 2. STRICT WRITE PHASE: Apply all style changes without querying the DOM layout
         cardMeasurements.forEach((measurement) => {
           if (!measurement) return;
-          const { card, innerCard, dist, index } = measurement;
+          const { card, innerCard, cardCenter, index } = measurement;
+          
+          let dist = (cardCenter - focalCenter) / (containerRect.width / 2);
+          dist = Math.max(-2, Math.min(2, dist));
 
           const isHovered = !isEdgePanning && (hoveredCardIndex.current === index);
           const anyCardHovered = !isEdgePanning && (hoveredCardIndex.current !== null);
 
-          // Dramatic scale drop-off for a strong 3D depth effect
-          let targetScale = Math.max(0.4, 1 - Math.abs(dist) * 0.45); 
+          // Smoother scale drop-off for adjacent cards
+          let targetScale = Math.max(0.45, 1 - Math.abs(dist) * 0.35); 
           let targetGlow = Math.max(0, 1 - Math.abs(dist) * 1.5);
 
           if (isHovered) {
             targetScale = 1.05;
             targetGlow = 1;
           } else if (anyCardHovered) {
-            targetScale *= 0.8; // Shrink all other cards
-            targetGlow *= 0.2; // Severely dim their glow
+            // When something is hovered, severely dim the glow of non-hovered cards,
+            // but rely on `dist` (which is relative to the hovered card) to shrink them naturally.
+            targetGlow *= 0.2; 
           }
 
           const data = cardsData.current[index];
