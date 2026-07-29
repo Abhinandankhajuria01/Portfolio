@@ -1,20 +1,26 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 
+import ParticleSphere from './ParticleSphere';
+
 export default function Hero() {
   const { scrollY } = useScroll();
   const yBg = useTransform(scrollY, [0, 1000], [0, 300]);
-  const opacityBg = useTransform(scrollY, [0, 800], [0.3, 0]);
+  const opacityBg = useTransform(scrollY, [0, 800], [1, 0]);
 
   return (
-    <section className="relative min-h-0 md:min-h-[90vh] flex flex-col items-center justify-center bg-black mb-0 md:mb-24 pt-16 pb-6 md:py-0">
-      {/* Background Image Overlay with Parallax wrapped to prevent spilling */}
+    <section className="relative min-h-0 md:min-h-[90vh] flex flex-col items-center justify-center bg-black mb-0 md:mb-24 pt-16 pb-6 md:py-0 overflow-hidden">
+      {/* 3D Particle Sphere Background */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <motion.div 
-          style={{ y: yBg, opacity: opacityBg, scale: 1.1 }}
-          className="absolute inset-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')] bg-cover bg-center grayscale origin-top"
-        />
+          style={{ y: yBg, opacity: opacityBg }}
+          className="absolute inset-0 w-full h-full origin-top"
+        >
+          <ParticleSphere />
+        </motion.div>
       </div>
-      <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/10 via-black/40 to-black pointer-events-none"></div>
+      
+      {/* Gradient overlay to blend with the rest of the page */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-black/40 to-black pointer-events-none"></div>
 
       {/* Centered Typography */}
       <div className="z-10 flex flex-col items-center text-center px-4 md:mt-[-5vh] w-full max-w-[95vw] mb-12 md:mb-0">
