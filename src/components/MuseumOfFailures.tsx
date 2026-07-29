@@ -263,7 +263,7 @@ export default function MuseumOfFailures() {
       {/* Infinite Gallery */}
       <div 
         ref={containerRef} 
-        className="flex overflow-x-auto w-full px-[calc(50vw-140px)] sm:px-[calc(50vw-190px)] py-12 hide-scrollbar relative z-20 cursor-ew-resize"
+        className="flex overflow-hidden touch-pan-y w-full px-[calc(50vw-140px)] sm:px-[calc(50vw-190px)] py-12 hide-scrollbar relative z-20 cursor-ew-resize"
         style={{ scrollbarWidth: 'none' }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
