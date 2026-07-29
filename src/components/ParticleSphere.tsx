@@ -20,20 +20,20 @@ export default function ParticleSphere() {
 
     // Create particles with random 3D positions and wave phases
     const particles: { x: number; y: number; z: number; size: number; length: number; phaseX: number; phaseY: number }[] = [];
-    const numParticles = 800; // Good density for a random cloud
+    const numParticles = 2000; // Massively increased density for better visibility
 
     for (let i = 0; i < numParticles; i++) {
-      // Random coordinates between -1 and 1 (a cube volume)
-      const x = (Math.random() - 0.5) * 2;
-      const y = (Math.random() - 0.5) * 2;
-      const z = (Math.random() - 0.5) * 2;
+      // Random coordinates between -1.5 and 1.5 (a larger volume)
+      const x = (Math.random() - 0.5) * 3;
+      const y = (Math.random() - 0.5) * 3;
+      const z = (Math.random() - 0.5) * 3;
 
       particles.push({
         x,
         y,
         z,
-        size: Math.random() * 2 + 1, // Thicker particles (1 to 3px)
-        length: Math.random() * 0.015 + 0.005, // Shorter dashes
+        size: Math.random() * 3 + 1.5, // Much thicker particles (1.5 to 4.5px)
+        length: Math.random() * 0.015 + 0.005,
         phaseX: Math.random() * Math.PI * 2,
         phaseY: Math.random() * Math.PI * 2,
       });
@@ -42,18 +42,27 @@ export default function ParticleSphere() {
     let time = 0;
     let animationFrameId: number;
 
-    let mouseX = -1000;
-    let mouseY = -1000;
+    // Use a target mouse coordinate for smooth lerping
+    let targetMouseX = -1000;
+    let targetMouseY = -1000;
+    let currentMouseX = -1000;
+    let currentMouseY = -1000;
     let scrollYOffset = window.scrollY;
 
     const handleMouseMove = (e: MouseEvent) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
+      targetMouseX = e.clientX;
+      targetMouseY = e.clientY;
+      // If mouse is just entering, snap current to target immediately
+      if (currentMouseX === -1000) {
+        currentMouseX = targetMouseX;
+        currentMouseY = targetMouseY;
+      }
     };
     
     const handleMouseLeave = () => {
-      mouseX = -1000;
-      mouseY = -1000;
+      targetMouseX = -1000;
+      targetMouseY = -1000;
+      // Allow current to smoothly lerp out of frame
     };
 
     const handleScroll = () => {
@@ -65,14 +74,17 @@ export default function ParticleSphere() {
     window.addEventListener('scroll', handleScroll, { passive: true });
 
     const applyMagneticPull = (x: number, y: number) => {
-      const dx = mouseX - x;
-      const dy = mouseY - y;
+      if (currentMouseX === -1000) return { x, y, force: 0 };
+      
+      const dx = currentMouseX - x;
+      const dy = currentMouseY - y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const magnetRadius = 300; 
+      const magnetRadius = 350; // Slightly larger attraction field
 
       if (dist < magnetRadius && dist > 0) {
+        // Smoother easing curve
         const force = Math.pow((magnetRadius - dist) / magnetRadius, 2);
-        const strength = 0.4;
+        const strength = 0.5; // Stronger pull
         return {
           x: x + dx * force * strength,
           y: y + dy * force * strength,
@@ -84,8 +96,6 @@ export default function ParticleSphere() {
 
     // Helper to calculate a particle's position in the wave field at a given time
     const getWavePosition = (p: typeof particles[0], t: number, scrollOffset: number) => {
-      // Wave parameters influenced by their original position and time
-      // Scroll moves the wave vertically
       const scrollWave = scrollOffset * 0.001;
       
       const waveX = Math.sin(p.y * 3 + t * 2 + p.phaseX) * 0.2 + Math.cos(p.z * 2 + t) * 0.1;
@@ -102,16 +112,24 @@ export default function ParticleSphere() {
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      time += 0.002; // Speed of the wave undulation
+      time += 0.002; 
+      
+      // Smoothly interpolate the magnetic center towards the real mouse position
+      if (targetMouseX !== -1000) {
+        currentMouseX += (targetMouseX - currentMouseX) * 0.08;
+        currentMouseY += (targetMouseY - currentMouseY) * 0.08;
+      } else {
+        // Move current mouse out of bounds smoothly if left
+        currentMouseX += (-1000 - currentMouseX) * 0.08;
+        currentMouseY += (-1000 - currentMouseY) * 0.08;
+      }
 
-      const radius = Math.min(width, height) * 0.6; // Spread of the cloud
+      const radius = Math.min(width, height) * 0.6;
       const focalLength = 350;
       
       const projected = particles.map((p) => {
-        // Calculate position at current time
         const pos = getWavePosition(p, time, scrollYOffset);
 
-        // Push the cloud back slightly so z doesn't cross the camera
         const cameraZ = pos.z * 200 + 250;
         const scale = focalLength / (focalLength + cameraZ);
 
@@ -124,11 +142,10 @@ export default function ParticleSphere() {
       projected.sort((a, b) => b.z - a.z);
 
       projected.forEach((proj) => {
-        if (proj.z > 2) return; 
+        if (proj.z > 2.5) return; 
 
         ctx.beginPath();
 
-        // Calculate a trailing point slightly ahead in time to draw a short dash along the flow
         const dt = proj.p.length;
         const futurePos = getWavePosition(proj.p, time + dt, scrollYOffset);
         
@@ -141,23 +158,22 @@ export default function ParticleSphere() {
         const p1 = applyMagneticPull(proj.screenX, proj.screenY);
         const p2 = applyMagneticPull(screenX2, screenY2);
 
-        // Base opacity based on depth scale
-        let alpha = Math.max(0.05, Math.min(1, proj.scale * 0.8));
+        // Substantially increased base opacity to make them clearly visible
+        let alpha = Math.max(0.2, Math.min(1, proj.scale * 1.8));
         
-        // Boost opacity and add cyan glow if magnetically pulled
         const pullForce = Math.max(p1.force, p2.force);
         
         if (pullForce > 0) {
-          const cyanIntensity = Math.min(1, pullForce * 2);
-          ctx.strokeStyle = `rgba(${255 - cyanIntensity * 255}, ${255 - cyanIntensity * 15}, ${255}, ${alpha + pullForce * 0.5})`;
-          ctx.shadowBlur = cyanIntensity * 10;
+          const cyanIntensity = Math.min(1, pullForce * 2.5);
+          ctx.strokeStyle = `rgba(${255 - cyanIntensity * 255}, ${255 - cyanIntensity * 15}, ${255}, ${alpha + pullForce})`;
+          ctx.shadowBlur = cyanIntensity * 15;
           ctx.shadowColor = '#00f0ff';
         } else {
           ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
           ctx.shadowBlur = 0;
         }
 
-        ctx.lineWidth = proj.p.size * proj.scale; // Thicker lines based on new size logic
+        ctx.lineWidth = proj.p.size * proj.scale;
         ctx.lineCap = 'round';
 
         ctx.moveTo(p1.x, p1.y);
