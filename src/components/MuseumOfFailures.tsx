@@ -211,14 +211,16 @@ export default function MuseumOfFailures() {
           );
 
           // Map vertical scroll to horizontal scroll reliably for mobile and desktop
+          // By using a relative +=1200, we scroll about 3-4 cards horizontally 
+          // across the entire vertical scroll duration, making it very slow and smooth.
           gsap.to(containerRef.current, {
-            scrollLeft: () => containerRef.current ? containerRef.current.scrollWidth - window.innerWidth : 0,
+            scrollLeft: '+=1200',
             ease: 'none',
             scrollTrigger: {
               trigger: sectionRef.current,
               start: 'top bottom', // Start when section enters from bottom
               end: 'bottom top',   // End when section leaves at top
-              scrub: 1,            // Smooth 1s catch-up time
+              scrub: 1.5,          // Increased scrub time for even smoother inertia
               invalidateOnRefresh: true,
             }
           });
