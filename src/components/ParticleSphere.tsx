@@ -88,21 +88,14 @@ export default function ParticleSphere() {
       if (Math.abs(dx) > 400 || Math.abs(dy) > 400) return { x, y, force: 0 };
       
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const magnetRadius = 400; // Total area of effect
-      const ringRadius = 120; // The radius of the empty circle they form around the cursor
+      const magnetRadius = 400; 
+      const ringRadius = 120; 
 
       if (dist < magnetRadius && dist > 0) {
-        // Distance from the desired ring perimeter
-        // Positive means it's outside the ring (pull in). Negative means it's inside the ring (push out).
         const targetDist = dist - ringRadius;
-        
-        // Easing function: stronger pull near the ring, weaker as it approaches magnetRadius
         const force = Math.pow((magnetRadius - dist) / magnetRadius, 2);
-        
-        // How strongly they snap to the ring
         const strength = 0.8; 
         
-        // Vector to move the particle towards the ring
         const moveX = (dx / dist) * targetDist;
         const moveY = (dy / dist) * targetDist;
         
@@ -128,14 +121,24 @@ export default function ParticleSphere() {
         z: p.z + waveZ
       };
     };
+    
+    // Helper to rotate the entire 3D field based on mouse position
+    const applyGlobalRotation = (pos: {x: number, y: number, z: number}, rotX: number, rotY: number) => {
+      const x1 = pos.x * Math.cos(rotY) - pos.z * Math.sin(rotY);
+      const z1 = pos.x * Math.sin(rotY) + pos.z * Math.cos(rotY);
+      
+      const y2 = pos.y * Math.cos(rotX) - z1 * Math.sin(rotX);
+      const z2 = pos.y * Math.sin(rotX) + z1 * Math.cos(rotX);
+      
+      return { x: x1, y: y2, z: z2 };
+    };
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      time += 0.0008; // Significantly slowed down for a very smooth, relaxing pace
+      time += 0.0008; 
       
       if (targetMouseX !== -1000) {
-        // Slower mouse interpolation for smoother trailing
         currentMouseX += (targetMouseX - currentMouseX) * 0.04;
         currentMouseY += (targetMouseY - currentMouseY) * 0.04;
       } else {
@@ -143,15 +146,23 @@ export default function ParticleSphere() {
         currentMouseY += (-1000 - currentMouseY) * 0.04;
       }
 
+      // Calculate global parallax rotation based on normalized mouse coords
+      const normMouseX = currentMouseX !== -1000 ? (currentMouseX / width) * 2 - 1 : 0;
+      const normMouseY = currentMouseY !== -1000 ? (currentMouseY / height) * 2 - 1 : 0;
+      
+      const globalRotY = normMouseX * 0.5; // Max horizontal tilt
+      const globalRotX = normMouseY * 0.5; // Max vertical tilt
+
       const radius = Math.min(width, height) * 0.6;
       const focalLength = 350;
       
-      // Update pre-allocated array (zero allocations = no garbage collection lag)
       for (let i = 0; i < numParticles; i++) {
         const proj = projected[i];
-        const p = proj.p; // CRITICAL FIX: Use the particle attached to this projected object, since the array gets sorted!
+        const p = proj.p; 
         
-        const pos = getWavePosition(p, time, scrollYOffset);
+        let pos = getWavePosition(p, time, scrollYOffset);
+        pos = applyGlobalRotation(pos, globalRotX, globalRotY);
+        
         const cameraZ = pos.z * 200 + 250;
         
         proj.z = pos.z;
@@ -160,7 +171,6 @@ export default function ParticleSphere() {
         proj.screenY = height / 2 + pos.y * radius * proj.scale;
       }
 
-      // Sort in-place back-to-front
       projected.sort((a, b) => b.z - a.z);
 
       ctx.lineCap = 'round';
@@ -172,7 +182,8 @@ export default function ParticleSphere() {
         ctx.beginPath();
 
         const dt = proj.p.length;
-        const futurePos = getWavePosition(proj.p, time + dt, scrollYOffset);
+        let futurePos = getWavePosition(proj.p, time + dt, scrollYOffset);
+        futurePos = applyGlobalRotation(futurePos, globalRotX, globalRotY);
         
         const futureCameraZ = futurePos.z * 200 + 250;
         const scale2 = focalLength / (focalLength + futureCameraZ);
@@ -189,7 +200,6 @@ export default function ParticleSphere() {
         if (pullForce > 0) {
           const cyanIntensity = Math.min(1, pullForce * 2.5);
           ctx.strokeStyle = `rgba(${255 - cyanIntensity * 255}, ${255 - cyanIntensity * 15}, ${255}, ${alpha + pullForce})`;
-          // Removed shadowBlur to fix severe rendering lag on some GPUs
         } else {
           ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
         }
