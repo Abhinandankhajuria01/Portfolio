@@ -173,17 +173,17 @@ export default function Projects() {
     <section id="projects" ref={sectionRef} className="py-16 md:py-32 px-6 bg-black text-white border-t border-white/10">
       <div className="max-w-7xl mx-auto">
         
-        <div className="flex flex-col lg:flex-row gap-16 lg:gap-24">
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-16">
           {/* Left Column Header */}
-          <div className="lg:w-1/3">
-            <h2 ref={headingRef} className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-[0.1em] leading-tight sticky top-32" style={{ clipPath: 'inset(0 0% 0 0)' }}>
+          <div className="lg:w-5/12">
+            <h2 ref={headingRef} className="text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-black uppercase tracking-[0.1em] leading-tight sticky top-32 break-words" style={{ clipPath: 'inset(0 0% 0 0)' }}>
               Featured<br/>Projects.<br/>
               <span className="text-gray-600 block mt-4">Unmatched<br/>Innovation.</span>
             </h2>
           </div>
 
           {/* Right Column Grid */}
-          <div className="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="lg:w-7/12 grid grid-cols-1 md:grid-cols-2 gap-8">
             {projects.map((project, idx) => {
               const Icon = project.icon;
               return (
