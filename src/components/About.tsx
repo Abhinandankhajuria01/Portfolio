@@ -20,6 +20,7 @@ export default function About() {
   const imgBackRef = useRef<HTMLDivElement>(null);
   const dividerRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -130,6 +131,24 @@ export default function About() {
           }
         );
       }
+
+      // Horizontal scroll animation for approach cards on mobile
+      if (trackRef.current) {
+        const scrollDist = trackRef.current.scrollWidth - trackRef.current.clientWidth;
+        if (scrollDist > 0) {
+          gsap.to(trackRef.current, {
+            x: -scrollDist,
+            ease: "none",
+            scrollTrigger: {
+              trigger: trackRef.current,
+              start: "top 85%",
+              end: "bottom 20%",
+              scrub: 1,
+              invalidateOnRefresh: true,
+            }
+          });
+        }
+      }
     }, el);
 
     return () => ctx.revert();
@@ -152,15 +171,15 @@ export default function About() {
           {/* Approach cards row */}
           <div className="flex justify-center items-center relative max-w-4xl mx-auto overflow-hidden pb-4">
             <div ref={dividerRef} className="absolute top-[18px] left-8 right-8 h-[1px] bg-gray-200 hidden md:block" />
-            <div className="flex justify-between items-start md:items-center gap-2 md:gap-6 w-full px-0 md:px-12">
+            <div ref={trackRef} className="flex justify-start md:justify-between gap-6 w-full px-2 md:px-12">
               {cards.map((card, idx) => (
                 <div
                   key={idx}
                   ref={el => { cardsRef.current[idx] = el; }}
-                  className="flex flex-col items-center bg-white px-1 flex-1 group"
+                  className="flex flex-col items-center bg-white px-2 w-28 flex-shrink-0 md:w-auto group"
                 >
                   <div className="w-3 h-3 bg-black rounded-full mb-3 md:mb-4 transition-transform duration-300 group-hover:scale-150 group-hover:bg-gray-700" />
-                  <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-800 text-center transition-colors duration-300 group-hover:text-black leading-tight">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800 text-center transition-colors duration-300 group-hover:text-black">
                     {card.title}
                   </h3>
                 </div>
