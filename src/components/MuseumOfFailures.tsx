@@ -127,11 +127,11 @@ export default function MuseumOfFailures() {
           </p>
         </div>
 
-        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
+        <div ref={gridRef} className="flex flex-nowrap overflow-x-auto gap-6 sm:gap-8 pb-8 pt-4 snap-x snap-mandatory scroll-smooth" style={{ scrollbarWidth: 'none' }}>
           {failures.map((failure) => (
             <motion.div
               key={failure.id}
-              className="failure-card bg-[#111] border border-white/10 p-5 sm:p-8 transition-colors duration-500 group cursor-pointer relative overflow-hidden"
+              className="failure-card shrink-0 w-[85vw] sm:w-[400px] snap-center bg-[#111] border border-white/10 p-5 sm:p-8 transition-colors duration-500 group cursor-pointer relative overflow-hidden"
               whileHover={{
                 scale: 1.04,
                 y: -6,
