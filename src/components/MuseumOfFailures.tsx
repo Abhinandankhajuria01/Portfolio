@@ -86,8 +86,33 @@ export default function MuseumOfFailures() {
     }
   }, []);
 
+  // Smooth scroll velocity tracking
+  const scrollVelocity = useRef(0);
+  const lastScrollY = useRef(0);
 
-
+  useEffect(() => {
+    lastScrollY.current = window.scrollY;
+    
+    const onScroll = () => {
+      const currentScrollY = window.scrollY;
+      const deltaY = currentScrollY - lastScrollY.current;
+      
+      const container = containerRef.current;
+      if (container) {
+        const rect = container.getBoundingClientRect();
+        // Only apply momentum if the gallery is visible
+        if (rect.top < window.innerHeight && rect.bottom > 0) {
+          // Add velocity based on scroll speed. Cap it to prevent insanely fast scrolling.
+          scrollVelocity.current += Math.max(-30, Math.min(30, deltaY * 0.4));
+        }
+      }
+      
+      lastScrollY.current = currentScrollY;
+    };
+    
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
   useEffect(() => {
     const renderLoop = () => {
       if (containerRef.current) {
@@ -96,6 +121,15 @@ export default function MuseumOfFailures() {
           containerRef.current.scrollLeft -= 4;
         } else if (hoverDirection.current === 'right') {
           containerRef.current.scrollLeft += 4;
+        }
+
+        // Apply smooth vertical-to-horizontal scroll momentum
+        if (Math.abs(scrollVelocity.current) > 0.1) {
+          containerRef.current.scrollLeft += scrollVelocity.current;
+          // Apply friction (decays velocity to 0 smoothly)
+          scrollVelocity.current *= 0.85;
+        } else {
+          scrollVelocity.current = 0;
         }
 
         // 1. STRICT READ PHASE: Read all layout data first to prevent layout thrashing
@@ -209,21 +243,6 @@ export default function MuseumOfFailures() {
               },
             }
           );
-
-          // Map vertical scroll to horizontal scroll reliably for mobile and desktop
-          // By using a relative +=1200, we scroll about 3-4 cards horizontally 
-          // across the entire vertical scroll duration, making it very slow and smooth.
-          gsap.to(containerRef.current, {
-            scrollLeft: '+=1200',
-            ease: 'none',
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: 'top bottom', // Start when section enters from bottom
-              end: 'bottom top',   // End when section leaves at top
-              scrub: 1.5,          // Increased scrub time for even smoother inertia
-              invalidateOnRefresh: true,
-            }
-          });
         }
       }, el);
     } catch (e) {
@@ -263,7 +282,7 @@ export default function MuseumOfFailures() {
       {/* Infinite Gallery */}
       <div 
         ref={containerRef} 
-        className="flex overflow-hidden touch-pan-y w-full px-[calc(50vw-140px)] sm:px-[calc(50vw-190px)] py-12 hide-scrollbar relative z-20 cursor-ew-resize"
+        className="flex overflow-x-auto w-full px-[calc(50vw-140px)] sm:px-[calc(50vw-190px)] py-12 hide-scrollbar relative z-20 cursor-ew-resize"
         style={{ scrollbarWidth: 'none' }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
