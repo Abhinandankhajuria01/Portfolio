@@ -72,11 +72,11 @@ export default function MuseumOfFailures() {
         );
       }
 
-      // Fade in the entire marquee container
+      // Fade in the 3D carousel container
       if (gridRef.current) {
         gsap.fromTo(
           gridRef.current,
-          { opacity: 0, y: 30 },
+          { opacity: 0, y: 50 },
           {
             opacity: 1,
             y: 0,
@@ -100,15 +100,45 @@ export default function MuseumOfFailures() {
       className="py-16 md:py-32 px-6 bg-[#0a0a0a] text-white relative overflow-hidden"
     >
       <style>{`
-        .animate-marquee {
-          animation: marquee 30s linear infinite;
+        .carousel-3d-container {
+          perspective: 1000px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 600px; /* fixed height for absolute positioned cards */
         }
-        .animate-marquee:hover {
+        
+        .carousel-3d-ring {
+          position: relative;
+          width: 300px;
+          height: 400px;
+          transform-style: preserve-3d;
+          animation: rotateRing 30s linear infinite;
+        }
+        
+        .carousel-3d-ring:hover {
           animation-play-state: paused;
         }
-        @keyframes marquee {
-          0% { transform: translateX(0%); }
-          100% { transform: translateX(-50%); }
+        
+        @keyframes rotateRing {
+          0% { transform: rotateY(0deg); }
+          100% { transform: rotateY(-360deg); } /* negative for right-to-left rotation */
+        }
+        
+        .carousel-3d-card {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          /* backface-visibility: hidden; optional, but keeping it visible is cool */
+        }
+        
+        @media (min-width: 640px) {
+          .carousel-3d-ring {
+            width: 380px;
+            height: 450px;
+          }
         }
       `}</style>
       
@@ -120,7 +150,7 @@ export default function MuseumOfFailures() {
       />
 
       <div className="max-w-6xl mx-auto relative z-10">
-        <div ref={headerRef} className="mb-10 md:mb-20 text-center">
+        <div ref={headerRef} className="mb-10 md:mb-16 text-center">
           <p className="text-red-500 font-mono text-sm tracking-widest uppercase mb-4">Exhibit.04</p>
           <h2 className="text-4xl md:text-6xl font-black uppercase tracking-[0.1em] mb-6">
             Museum of Failures.
@@ -129,49 +159,60 @@ export default function MuseumOfFailures() {
             Every successful launch is built on a graveyard of terrible ideas, broken code, and bad decisions.
             Here are a few of my favorite missteps and what they taught me.
           </p>
-          <p className="text-gray-300 max-w-2xl mx-auto text-lg leading-relaxed mt-4 italic">
-            "Whatever I am today, my failures contributed just as much as my achievements. I couldn't be the
-            person I am without them."
-          </p>
         </div>
 
-        {/* Marquee Wrapper */}
-        <div ref={gridRef} className="overflow-hidden w-[100vw] relative left-1/2 -translate-x-1/2 pb-8 pt-4">
-          <div className="flex w-max animate-marquee">
-            {[...failures, ...failures].map((failure, index) => (
-              <div key={`${failure.id}-${index}`} className="pr-6 sm:pr-8 shrink-0">
-                <motion.div
-                  className="failure-card w-[85vw] sm:w-[400px] bg-[#111] border border-white/10 p-5 sm:p-8 transition-colors duration-500 group cursor-pointer relative overflow-hidden"
-                  whileHover={{
-                    scale: 1.04,
-                    y: -6,
-                    borderColor: 'rgba(239, 68, 68, 0.8)',
-                    boxShadow: '0 15px 35px rgba(239, 68, 68, 0.15)',
+        {/* 3D Rotating Carousel */}
+        <div ref={gridRef} className="carousel-3d-container w-full pt-4">
+          <div className="carousel-3d-ring">
+            {failures.map((failure, index) => {
+              // 5 cards = 360 / 5 = 72 degrees each
+              const rotateY = index * 72;
+              // TranslateZ determines the radius of the circle
+              // Z needs to be large enough so cards don't overlap. 
+              // Math: Z = (width / 2) / Math.tan(PI / 5) ~ width * 0.688. 
+              // We'll use 400px (desktop) and 280px (mobile) dynamically via a CSS custom property or inline style
+              return (
+                <div 
+                  key={failure.id} 
+                  className="carousel-3d-card"
+                  style={{
+                    transform: `rotateY(${rotateY}deg) translateZ(clamp(280px, 45vw, 420px))`
                   }}
-                  whileTap={{ scale: 0.96 }}
-                  transition={{ type: 'spring', stiffness: 350, damping: 20 }}
                 >
-                  {/* Shimmer sweep overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out pointer-events-none" />
+                  <motion.div
+                    className="w-full h-full bg-[#111] border border-white/10 p-5 sm:p-8 transition-colors duration-500 group relative overflow-hidden flex flex-col justify-between"
+                    whileHover={{
+                      borderColor: 'rgba(239, 68, 68, 0.8)',
+                      boxShadow: '0 15px 35px rgba(239, 68, 68, 0.25)',
+                      scale: 1.02,
+                    }}
+                    transition={{ type: 'spring', stiffness: 350, damping: 20 }}
+                  >
+                    {/* Shimmer sweep overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out pointer-events-none" />
 
-                  <div className="text-4xl sm:text-5xl font-black text-white/5 mb-4 sm:mb-8 group-hover:text-red-500/20 transition-colors duration-500">
-                    {failure.id}
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-bold uppercase tracking-wider mb-2 sm:mb-4 leading-snug">
-                    {failure.title}
-                  </h3>
-                  <p className="text-gray-500 mb-4 sm:mb-6 text-xs sm:text-sm leading-relaxed">
-                    {failure.story}
-                  </p>
-                  <div className="pt-4 sm:pt-6 border-t border-white/10">
-                    <p className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-red-500 mb-1">
-                      Lesson Learned
-                    </p>
-                    <p className="text-xs sm:text-sm font-bold text-gray-300">{failure.lesson}</p>
-                  </div>
-                </motion.div>
-              </div>
-            ))}
+                    <div>
+                      <div className="text-4xl sm:text-5xl font-black text-white/5 mb-4 group-hover:text-red-500/20 transition-colors duration-500">
+                        {failure.id}
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-bold uppercase tracking-wider mb-2 leading-snug">
+                        {failure.title}
+                      </h3>
+                      <p className="text-gray-500 mb-4 text-xs sm:text-sm leading-relaxed">
+                        {failure.story}
+                      </p>
+                    </div>
+                    
+                    <div className="pt-4 sm:pt-6 border-t border-white/10 mt-auto">
+                      <p className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-red-500 mb-1">
+                        Lesson Learned
+                      </p>
+                      <p className="text-xs sm:text-sm font-bold text-gray-300">{failure.lesson}</p>
+                    </div>
+                  </motion.div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
